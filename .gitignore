@@ -23,3 +23,16 @@ learnu3d_glassrain/.vsconfig
 learnu3d_glassrain/Assembly-CSharp-Editor.csproj
 learnu3d_glassrain/Assembly-CSharp.csproj
 learnu3d_glassrain/learnu3d_glassrain.sln
+
+# learnu3d_DOTS
+learnu3d_DOTS/.vs/*
+learnu3d_DOTS/Library/*
+learnu3d_DOTS/Logs/*
+learnu3d_DOTS/obj/*
+learnu3d_DOTS/Packages/*
+learnu3d_DOTS/Temp/*
+
+learnu3d_DOTS/.vsconfig
+learnu3d_DOTS/Assembly-CSharp-Editor.csproj
+learnu3d_DOTS/Assembly-CSharp.csproj
+learnu3d_DOTS/learnu3d_DOTS.sln
