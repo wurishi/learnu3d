@@ -36,3 +36,16 @@ learnu3d_DOTS/.vsconfig
 learnu3d_DOTS/Assembly-CSharp-Editor.csproj
 learnu3d_DOTS/Assembly-CSharp.csproj
 learnu3d_DOTS/learnu3d_DOTS.sln
+
+# VFX
+VFX/.vs/*
+VFX/Library/*
+VFX/Logs/*
+VFX/obj/*
+VFX/Packages/*
+VFX/Temp/*
+
+VFX/.vsconfig
+VFX/Assembly-CSharp-Editor.csproj
+VFX/Assembly-CSharp.csproj
+VFX/VFX.sln
