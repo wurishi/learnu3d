@@ -174,12 +174,12 @@ Unity 2022.3.16f1
     - Composition -> Multiply
     - Alpha Composition -> Multiply
 
-## 7.6 光源
+## 2.8 光源
 
 1. 在场景的 Trail 下创建 Light -> Point Light。
 2. Point Light 的颜色选择橙色，Intensity -> 2.5。
 
-## 7.7 更多粒子
+## 2.9 更多粒子
 
 1. 在 vfx_TrailParticles 将之前所有节点 Group 命名为 PARTICLES。
 2. 复制一份 PARTICLES 命名为 PARTICLES_SMALL。
@@ -192,6 +192,49 @@ Unity 2022.3.16f1
 7. Output Particle Quad -> Set Size -> Random -> Uniform，AB 值为 0.05 - 0.25。
 8. 创建 Color 属性为 ParticlesColor，颜色为更加强的红色。并连接到 Set Color -> Color，覆盖原有。
 9. 点击 Initialize Particle 右上角的 LOCAL，切换为 WORLD。
+
+# 3. 箭类特效 (未完成)
+
+## 3.1 初始化
+
+- 创建一个箭头类的 FBX 模型，命名为 Arrow。修改 ScaleFactor 为 100 并Apply。
+- 在场景 Create Empty，命名为 vfx_ArrowAttack。并 Reset Transform。
+
+## 3.2 开始
+
+1. 在 Project 里创建新的 Visual Effect Graph，命名为 vfx_graph。并将其作为子物体拖到场景上 vfx_ArrowAttack 下面。
+2. 编辑 vfx_graph，删除 Output Particle Quad，将 Update Particle 连接新的 Output Particle Mesh 节点。Mesh 指定为箭头。
+3. 删除 Initialize Particle 中的 Set Velocity Random，Set Lifetime -> Random -> Off。
+4. 创建 float 属性为 ArrowLifetime，默认值为 3。并连接到 Set Lifetime -> Lifetime。
+5. Initialize Particle -> Bounds Mode -> Manual。
+6. 删除 Spawn 的 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+7. 在 Output Particle Mesh 中创建 Set Size，Size -> 0.5。
+8. 再创建 Set Scale 。
+9. 再创建 Set Angle，将箭头调整为合适的方向。
+10. 在 Update Particle 中创建 Add Angle，X -> 1。
+
+## 3.3 箭头
+
+1. 创建从上到下的黑白渐变的材质，命名为 Gradient。
+2. Output Particle Mesh -> MainTexture 设置为 1. Gradient。
+3. 在 Output Particle Mesh 中创建 Set Color，Color 为淡蓝色，Intensity -> 1。
+4. Output Particle Mesh -> Blend Mode -> Additive。（非必需，Alpha 也可以）
+5. 将 Output Particle Mesh 命名为 ARROW。
+6. 创建 Simple Particle System。它的 Output Particle Quad 命名为 STRETCHED PARTICLES。
+   - Blend Mode -> Additive
+   - MainTexture -> Default-Particle
+7. Orient -> Mode -> Alone Velocity。
+8. 创建 Set Size, Random -> Uniform。AB 为 0.1 - 0.5。
+9. 创建 Set Scale，Random -> Uniform。AB 为 (0.1, 0.5, 1) - (0.2, 1, 1)。
+10. Set Size over Life 的 Size 曲线可以是从大到小的弧线。Composition -> Multiply。
+11. Set Color over Life 的 Composition -> Multiply。
+12. 创建 Set Color，颜色为蓝色，Intensity -> 1。
+13. Initialize Particle 的 Set Velocity Random 的 AB 为 (-0.2, -0.2, -2) - (0.2, 0.2, -10)。
+14. 创建 Set Position (Sphere)。
+
+## 3.4 烟雾 (需要素材)
+
+1. 再创建 Simple Particle System，Output Particle Quad 命名为 SMOKE。
 
 # 7. 球形畸变
 
