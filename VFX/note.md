@@ -236,6 +236,58 @@ Unity 2022.3.16f1
 
 1. 再创建 Simple Particle System，Output Particle Quad 命名为 SMOKE。
 
+# 4. 召唤生物类特效
+
+## 4.1 初始化模型和动画
+
+1. 一个动物类模型，只需要一个 Run 动画，Inspector -> Animation -> Loop Time -> On
+2. 场景创建空对象，命名为 vfx_Attack。并 Reset Transform。
+3. 将动物模型作为 vfx_Attack 的子级拖入。
+4. 如果没有动画，选择模型，Inspector -> Rig -> Avatar Definition -> Create From This Model。
+5. 在 Project 中创建 Animator Controller，并拖到模型上。
+6. 编辑 Animator Controller，右击 -> Create State -> Empty。Motion 指定 Run 动画。
+
+## 4.2 菲涅尔效果
+
+1. Project -> Create -> Shader Graph -> Blank Shader Graph。命名为 XxxShader。
+2. 编辑 1.Shader，Graph Inspector -> Graph Settings -> Target Settings -> Active Targets -> Universal。
+   - Material -> Unlit
+   - Allow Material Override -> On
+3. 创建 Fresnel Effect 节点，创建 Float 属性 FresnelPower，默认值为 1，并连接到 Fresnel Effect -> Power。
+4. 创建 Color 属性 Color，Mode -> HDR，Default -> 白色，Alpha -> 100。并连接新节点 Multiply: A。
+5. 将 3.Fresnel Effect 连接到 4.Multiply 的 B。
+6. 将 4.Multiply 连接到 Fragment 的 BaseColor。
+7. 创建 Material，命名为 HorseMat。将 HorseShader 拖到材质上。（或者直接右击 HorseShader 创建材质）
+8. 选择场景中的 Horse，将 Skinned Mesh Renderer -> Materials 替换为 HorseMat。
+9. 修改 HorseMat 的颜色为紫色，Intensity 适当加强。
+10. 将整个 Horse 作为预制体保存一份到 Project 中。
+
+## 4.3 腐蚀效果
+
+1. 回到 HorseShader 编辑界面，创建 Simple Noise 节点。Scale -> 30。并连接到 Fragment 的 Alpha。
+2. Graph Inspector -> Graph Settings -> Universal -> Alpha Clipping -> On。
+3. 创建 Float 属性 Erode，Mode -> Slider，Min - Max 为 0 - 1。并连接到 Fragment 的 Alpha Clip Threshold。
+4. 修改 HorseMat -> Alpha Clipping -> On。
+5. 创建 C# 脚本，命名为 HorseAttack。并添加给场景中的 Horse。（脚本中添加了 ErodeObject 别忘了指定）
+6. 创建 FPSCharacter。
+7. Horse 的预制体添加 Rigidbody 组件
+
+## 4.4 粒子效果
+
+1. 创建 Visual EffectGraph，命名为 vfx_AttackEffect。并拖入场景，作为 vfx_Attack 的子物件。位置和动物模型居中。
+2. 编辑 vfx_AttackEffect，将 Initialize Particle 的 LOCAL 修改为 WORLD。
+3. 创建 Set Position (Sphere)，Arc Shpere 的 W 修改为 Local，Radius -> 0.1。
+4. Spawn system -> Loop Duration 和 Loop Count 都设置为 Constant。
+5. 创建 float 属性 Duration。默认值 1.5。并连接到 Spawn -> Loop Duration。
+6. Spawn -> Rate -> 250，Initialize Particle -> Capacity -> 10000。
+7. Output Particle Quad 创建 Set Size，Random -> Uniform，AB 设置为 0.008 - 0.04。
+8. Set Size over Life，曲线调整上左上右下的弧线。Composition -> Multiply。
+9. MainTexture -> Default-Particle。
+10. 创建 Set Color，颜色为紫色，Intencity 适当加强。并禁用 Set Color over Life。
+11. Set Velocity Random 的 AB 设置为 (-0.5, -0.5, -0.5) - (0.5, 0.5, 0.5)。
+12. Update Particle 创建 Turbulence。
+13. 创建 Random Number 节点，Min -> -5，Max -> 5，Constant -> Off。并连接到 Turbulence -> Intensity。
+
 # 7. 球形畸变
 
 ## 7.1 初始化
