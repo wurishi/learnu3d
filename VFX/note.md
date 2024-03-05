@@ -288,6 +288,32 @@ Unity 2022.3.16f1
 12. Update Particle 创建 Turbulence。
 13. 创建 Random Number 节点，Min -> -5，Max -> 5，Constant -> Off。并连接到 Turbulence -> Intensity。
 
+# 5. UV 动态扭曲
+
+## 5.1 开始
+
+1. Create -> Shader Graph -> URP -> Unlit Shader Graph。
+2. Graph Inspector
+   - Universal -> Surface Type -> Transparent
+   - Allow Material Override -> On
+3. 创建 Texture2D 属性 MainTexture，连接新节点 Sample Texture2D。
+4. Sample Texture2D 的 RGBA 连接新节点 Multiply: B。
+5. 创建 Color 属性 Color，连接到 4.Multiply 的 A。
+6. 将 4.Multiply 连接新节点 Multiply: A。
+7. 创建 Vertex Color 节点连接到 6.Multiply 的 B。
+8. 将 6.Multiply 连接到 Fragment 的 Base Color。
+9. 再将 6.Multiply 连接新节点 Split。将它的 R 连接到 Fragment 的 Alpha 上。(如果是透明图可以选用 A 连接到 Alpha 上)
+10. 创建 Vector2 属性 MainSpeed。并连接新节点 Multiply: A。
+11. 创建 Time 节点，将 Time 连接 10.Multiply -> B。
+12. 创建 UV 节点，并连接新节点 Add: B。
+13. 将 10.Multiply 连接到 Add -> A。
+14. 将 Add 连接到 Sample Texture 2D  -> UV。
+15. 此时调整 MainSpeed 就可以控制材质的滚动。
+
+## 5.2 扭曲
+
+
+
 # 7. 球形畸变
 
 ## 7.1 初始化
