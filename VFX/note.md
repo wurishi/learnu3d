@@ -323,6 +323,32 @@ Unity 2022.3.16f1
 9. 将 Gradient Noise 连接 Lerp -> B。
 10. 创建 Float 属性 NoiseScale，默认值为 10。并连接 Gradient Noise -> Scale。
 
+# 6. 顶点动画
+
+## 6.1 开始
+
+1. 创建 Lit Shader Graph，命名为 Animation_PBR。Allow Material Override -> On。
+2. 创建 Lerp 节点，并连接到 Vertex -> Position。
+3. 创建 Position 节点，Space -> Object。并连接到 Lerp -> A。
+4. 再次创建 Position 节点，Space -> Object。并连接新节点 Split。
+5. Split -> R 连接新节点 Add: B。并将 Add 连接到 Lerp -> B。
+6. Add 再连接新节点 Combine: R。
+7. 将 Split 的 G 和 B 分别连接到 Combine 的 G 和 B 上。
+8. 将 Combine -> RGB 连接到 Lerp -> B 覆盖原有。
+9. 创建 Float 属性 WobbleSpeed，默认值为 0.5。
+10. 创建 Time 节点，Time 连接新节点 Multiply: A。
+11. WobbleSpeed 连接到 Multiply -> B。
+12. 创建 Position 节点，并连接新节点 Split。
+13. 将 12.Split -> G 连接新节点 Multiply: A。
+14. 创建 Float 属性 WobbleFrequency，默认值为 2。并连接到 13.Multiply -> B。
+15. 将 13.Multiply 连接新节点 Add: B。将 10.Multiply 连接到 Add -> A。
+16. 将 15.Add 连接到 5.Add -> A。
+17. 创建 Vector3 属性连接到 Lerp -> T。
+18. 将 15.Add 连接新节点 Sine，并连接新节点 Multiply: A。
+19. 创建 Float 属性 WobbleDistance，默认值 0.5。并连接 18.Multiiply -> B。
+20. 将 18.Multiply 连接 5.Add -> A。
+21. 创建 Float 属性 WobbleAmount，Mode -> Slider。并连接到 Lerp -> T。最后删除原来的 Vector3 属性。
+
 # 7. 球形畸变
 
 ## 7.1 初始化
