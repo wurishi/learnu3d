@@ -325,7 +325,7 @@ Unity 2022.3.16f1
 
 # 6. 顶点动画
 
-## 6.1 开始
+## 6.1 改变顶点
 
 1. 创建 Lit Shader Graph，命名为 Animation_PBR。Allow Material Override -> On。
 2. 创建 Lerp 节点，并连接到 Vertex -> Position。
@@ -437,3 +437,60 @@ Unity 2022.3.16f1
     - Intensity -> 5
     - Drag -> 5
     - Octaves -> 3
+
+# 8. 冲击波型运动
+
+## 8.1 开始
+
+1. 创建 Unlit Shader Graph 命名为 Burst。
+2. 编辑 Burst，Graph Inspector -> Graph Settings -> Universal：
+   - Allow Material Override -> On
+   - Cast Shadows -> Off
+   - Surface Type -> Transparent
+   - Render Face -> Both
+3. 创建 Rounded Rectangle 节点。
+4. 创建 Tiling And Offset 节点，并连接到 Rounded Rectangle -> UV。
+5. 调整 Rounded Rectangle -> Width -> 1.3 左右，Tiling And Offset -> Offset -> Y -> 0.5 左右。让整块白色在底部并且左右撑满，且调整 Height 可以看到是从下到上盖满的效果。
+6. 创建 UV 节点，连接到新节点 Lerp: A。
+7. 创建 Simple Noise 节点，X -> 25。连接到 Lerp -> B。
+8. 创建 Slider 节点，值为 0.5 左右。连接到 Lerp -> T。
+9. 将 Lerp 连接到 Tiling And Offset -> UV。
+10. 创建 Tiling And Offset 节点，Offset -> Y -> 0.55。并连接到 Simple Noise -> UV。
+11. 创建 Time 节点，Time 连接到新节点 Multiply: A。
+12. 将 11.Multiply 连接到 10.Tiling And Offset -> Offset。
+13. 创建 Vector2 节点，y -> -0.2。并连接 11.Multiply -> B。
+14. 创建 Vector2 节点，x -> 1，y -> 1。并连接 10.Tiling And Offset -> Tiling。
+15. 将 5.Rounded Rectangle 连接到 Fragment -> Base Color。
+16. 将 5.Rounded Rectangle 再连接新节点 Split。Split -> A 连接到 Fragment -> Alpha。（可能会完全透明，可以换成17）
+17. 或者将 5.Rounded Rectangle 再连接一条到 Fragment -> Alpha。
+18. 创建材质命名为 CylinderMat，并应用到场景上的 Cylinder 物体。
+
+## 8.2 优化
+
+1. 创建 Float 节点，默认值 1。连接到 5.Rounded Rectangle -> Height。
+2. 右击 Float 节点，Convert To -> Property 转换为属性，命名为 Height。
+3. 将 8.Slider 转换为属性，命名为 Distortion。
+4. 创建 Float 节点，默认值 25。连接到 Simple Noise -> Scale。再转换为属性，命名 DistortionScale。
+5. 将 14.Vector2 转换为属性，命名为 DistortionTiling。
+6. 将 13.Vector2 转换为属性 DistortionSpeed。
+7. 创建 Color 节点，Mode -> HDR，颜色为白色。连接到新节点 Multiply: A。
+8. 将 5.Rounded Rectangle 连接到 8.2.7 Multiply -> B。
+9. 将 8.2.7 Multiply 连接 Fragment -> Base Color 覆盖原有。
+10. 将 7.Color 转换为属性。
+11. 可以调整 DistortionTiling -> X -> -8 左右，DistortionScale -> 12 左右。来解决边缘不循环的问题。
+12. 可以往场景添加 Volume，指定 Profile。Camera -> Post Processing -> On。增加高光。
+
+## 8.3 增加颜色
+
+1. 新增 Rounded Rectangle，UV 和 Width 使用原来的 Tiling And Offset 配置。
+2. Height 连接新节点 Multiply: A。B -> X -> 0.7。然后连接到 8.3.1 Rounded Rectangle -> Height。
+3. 将 8.1.3 Rounded Rectangle 连接新节点 Subtract: A， 8.3.1 Rounded Rectangle 连接到 Subtract -> B。
+4. 将 Subtract 连接 8.2.7 Multiply -> B 覆盖原有。
+5. 将 8.3.1 Rounded Rectangle 连接新节点 Multiply: A。
+6. 创建 Color 节点，设置个其他颜色，并连接到 8.3.5 Multiply -> B。
+7. 将 8.3.5 Multiply 连接新节点 Add: B，再将 8.2.7 Multiply 连接到 Add -> A。
+8. 将 8.3.7 Add 连接到 Fragment -> Base Color 覆盖原有。
+9. 创建 Float 属性 BottomColorHeight，默认值为 0.7。连接 8.3.2 Multiply -> B。
+10. 将 8.3.6 Color 转换为属性 BottomColor。
+11. 修改 CylinderMat -> Depth Write -> ForceEnabled，Alpha Clipping -> On。
+
