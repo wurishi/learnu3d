@@ -312,7 +312,16 @@ Unity 2022.3.16f1
 
 ## 5.2 扭曲
 
-
+1. 创建 Lerp 节点，将 UV 连接到 Lerp -> A。
+2. 创建 Float 属性 DistortionAmount，Mode -> Slider, Default -> 0.1(根据素材调整), Min -> -1, Max -> 1，并连接到 Lerp -> T。（Min Max 一般推荐 -0.1 - 0.1 或 0.2）
+3. Lerp 连接到 Add -> B 上覆盖原有。
+4. 创建 Vector2 属性 NoiseSpeed，连接新节点 Multiply: B。
+5. 将 Time -> Time 连接到 5.Multiply -> A。
+6. 将 5.Multiply 连接新节点 Add: B。
+7. UV 连接到 7.Add -> A。
+8. 将 7.Add 连接新节点 Gradient Noise: UV。
+9. 将 Gradient Noise 连接 Lerp -> B。
+10. 创建 Float 属性 NoiseScale，默认值为 10。并连接 Gradient Noise -> Scale。
 
 # 7. 球形畸变
 
