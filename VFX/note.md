@@ -627,3 +627,28 @@ Unity 2022.3.16f1
 2. 创建 Float 属性 DissolveScale，X -> 2。连接 Voronol -> CellDensity。
 3. 创建 Float 属性 DistortionScale，X -> 5。连接 Gradient Noise -> Scale。
 4. 创建 Float 属性 DissolveAmounts，X -> 1.2。连接 Power -> B。
+
+# 12. 钻石发光效果
+
+## 12.1 开始
+
+1. 创建 Blank Shader Graph，命名为 CrystalShader。添加 Universal -> Lit。
+2. 创建 Float 属性 Metallic 和 Smoothness，Mode -> Slider。并连接到对应的 Fragment 的属性上。
+3. 创建 Color 属性 BaseColor，白色，Mode -> HDR。并连接 Fragment -> Base Color。
+4. 创建 Fresnel Effect 节点，连接 Fragment -> Emission。
+5. 创建 Color 属性 TopColor 和 BottomColor，Mode -> HDR，都为白色。
+6. TopColor 连接新节点 Multiply: A。Fresnel Effect 连接 Multiply -> B。Multiply 连接 Fragment -> Emission 覆盖原有。
+7. 创建 CrystalMat 材质调整 Metallic -> 0.54，Smoothness -> 0.12，BaseColor 和 BottomColor。（需要 Volume -> Bloom，Intensity 加强才有效果）
+
+## 12.2 底部发光
+
+1. 创建 UV 节点，连接新节点 Split。Split -> G 连接新节点 Multiply: A。Multiply -> B -> 0.8。Multiply 连接新节点 Smoothstep: Edge1，Smoothstep -> In -> 0.4。
+2. 将 12.2.1 Multiply 再连接新节点 One Minus，One Minus 连接新节点 Smoothstep: Edge1， Smoothstep -> In -> 0.5。
+3. 创建 Float 属性 TopLine 和 BottomLine。TopLine -> 0.65，BottomLine -> 0.35。
+4. TopLine 连接 2.Smoothstep -> In，BottomLine 连接 1.Smoothstep -> In。
+5. 将 1.Smoothstep 连接新节点 Multiply: A，12.1.6 Multiply 连接这个 Multiply -> B。
+6. BottomColor 连接新节点 Multiply: B，Fresnel Effect 连接这个 Multiply -> A。
+7. 将 1.Smoothstep 连接新节点 Multiply: A，12.2.6 Multiply 连接这个 Multiply -> B。
+8. 将 12.2.5 Multiply 连接新节点 Add: A，12.2.7 Multiply 连接这个 Add -> B。再将这个 Add 连接 Fragment -> Emission 覆盖原有。
+
+# 13.
