@@ -494,3 +494,95 @@ Unity 2022.3.16f1
 10. 将 8.3.6 Color 转换为属性 BottomColor。
 11. 修改 CylinderMat -> Depth Write -> ForceEnabled，Alpha Clipping -> On。
 
+# 9. 蛇形顶点螺旋动画
+
+模型有特殊需求
+
+# 10. 龙息术
+
+## 10.1 开始
+
+1. 场景中 Create Empty，命名为 vfx_DragonBreath 并 Reset Transform。
+2. 创建 Visual Effect Graph，命名为 vfxgraph_DragonBreath，并且作为 vfx_DragonBreath 的子物件拖到场景中。
+3. 编辑 vfxgraph_DragonBreath，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+4. 删除 Set Velocity Random。Set Lifetime Random -> Random -> Off，Lifetime -> 2.5。
+5. Update Particle 创建 Set Velocity。
+6. 创建 AnimationCurve 属性 FireTrailMotion，曲线为左上右下，最后一帧为 0.3, 0.13。并连接新节点 Sample Curve。
+7. 创建 Age Over Lifetime 节点，连接到 Sample Curve -> Time。
+8. 创建 Float 属性 FireTrailSpeed，Value -> 13，连接新节点 Multiply。
+9. Sample Curve 连接 Multiply -> B。Multiply 连接 Set Velocity -> Z。
+10. Update Particle 创建 Trigger Event Rate，Rate -> 30。
+11. 创建 Simple Heads And Trails，删除 Heads 部分，将 Trigger Event Rate 连接到剩下部分中的 GPUEvent。
+
+## 10.2 拖尾
+
+1. 在 Trail Bodies 中，Strip Capacity -> 64，Lifetime -> 1.5，删除 Turbulence。
+2. 在 Output Particle Quad 添加 Set Size，Size -> 1.6。（Set Size 要在 Set Size over Life 上面）
+3. Set Size over Life -> Size 曲线修改为从大到小的弧线，Composition -> Multiply。
+
+## 10.3 火焰痕迹
+
+1. 创建 Blank Shader Graph，命名为 DragonBreathShader。
+2. 编辑 DragonBreathShader，GraphInspector -> Graph Settings -> Target Settings 添加 Visual Effect。
+3. 创建 Color 属性 Color01 和 Color02，Texture2D 属性 MainTex。
+4. Color01，Mode -> HDR，Default -> 黄色。
+5. Color02，Mode -> HDR，Default -> 红色。
+6. Color01 连接新节点 Lerp: A。Color02 连接 Lerp -> B。
+7. 创建 UV 节点连接新节点 Split，Split -> R 连接 Lerp -> T。
+8. Lerp 连接新节点 Multiply: A。
+9. MainTex 连接新节点 Sample Texture 2D，Sample Texture 2D -> RGBA 连接 8.Multiply -> B。
+10. 创建 Tiling And Offset 节点连接到 Sample Texture 2D -> UV。
+11. 创建 Vector2 属性 MainTexTiling 和 MainTexSpeed。
+12. MainTexTiling 的 XY 为 (1, 1)，连接到 Tiling And Offset -> Tiling。
+13. 创建 Time 节点，Time 连接新节点 Multiply: A。
+14. MainTexSpeed，X -> 0.1。并连接 13.Multiply -> B，13.Multiply 连接 Tiling And Offset -> Offset。
+15. 将 8.Multiply 连接 Fragment -> BaseColor 和 Alpha。
+16. 回到 vfxgraph_DragonBreath，删除最早创建的 Output Particle Quad。（不是 Trail Bodies 的）
+17. Trail Bodies 的 Output ParticleStrip Quad -> Shader Graph -> DragonBreathShader，Blend Mode -> Alpha。
+18. 在 DragonBreathShader，将 Sample Texture 2D 连接新节点 Multiply: A。新节点 Multiply 再连接 8.Multiply -> B 覆盖原有。
+19. 创建 Voronol 节点，连接新节点 Power: A，Power -> B -> 4。
+20. 创建 Float 属性 DissolveScale，X -> 3，连接 Voronoi -> CellDensity。
+21. 创建 Tiling And Offset 节点连接 Voronol -> UV。
+22. 创建 Time 节点，Time 连接新节点 Multiply: A。
+23. 创建 Vector2 属性 DissolveSpeed，X -> -0.5，连接 22.Multiply -> B。
+24. 将 22.Multiply 连接 21.Tiling And Offset -> Offset。
+25. 将 19.Power 连接 18.Multiply -> B。
+26. 创建 Float 属性 DissolvePower，X -> 2，连接 19.Power -> B。
+27. 创建 UV 节点，连接新节点 Split，Split -> R 连接新节点 Multiply: B。
+28. 将 19.Power 连接 27.Multiply -> A。
+29. (倒置)将 27.Split 连接新节点 One Minus，One Minus 连接 27.Multiply -> B。将 27.Multiply 连接 18.Multiply -> B。
+30. 编辑 vfxgraph_DragonBreath，Sample Curve 连接新节点 Compare，Condition -> Greater Or Equal，Right -> 0.17(Sample Curve 的最右边的最小值)。
+31. Compare 连接新节点 Branch，True -> 30，Branch 连接 Trigger Event Rate -> Rate。
+32. 将 GPUEvent 之前的所有节点合成组命名为 FIRE。
+
+## 10.4 火焰烟雾
+
+1. 将 FIRE 组复制一份，命名为 FLAMES。
+2. 删除 FLAMES 中的 Single Burst，创建 Constant Spawn Rate block，Rate -> 32。
+3. Spawn system -> Inspector：
+   - Loop Duration -> Constant -> 1.7
+   - Loop Count -> Constant
+4. 将 Update Particle 的 Set Lifetime -> Random -> Uniform，AB 为 1 - 1.5。
+5. 在 Update Particle 创建 Set Angle，Random -> Uniform。AB 的 Z 为 (360, -360)。
+6. Update Particle 连接 Output Particle Quad。
+7. 删除 Trigger Event Rate 和相关的节点。
+8. 在 Output Particle Quad 创建 Orient: Face Camera Plane。
+9. 创建 Set Size，Random -> Uniform，A -> 1.5，B -> 3.5。
+10. 创建 Set Size over Life，Size -> 从小到大的曲线，从 0.35 左右开始。Composition -> Multiply。
+11. Shader Graph -> DragonBreathShader。MainTex -> Default-Particle。
+12. 创建 Sample Gradient，Gradient -> 第一个颜色 HSV(7, 95, 75)，Intensity -> 9，位置在 10%。第二个颜色 HSV(25, 75, 95)，Intensity -> 2，位置在 75%。并连接 Color01 和 Color02。
+13. 创建 Age Over Lifetime 节点，连接 Sample Gradient -> Time。
+14. 删除 FireTrailSpeed，原来连接的 Multiply -> A -> 20。
+15. 创建 Sample Curve 节点，创建 Age Over Lifetime 节点连接 Sample Curve -> Time。
+16. 将 15.Sample Curve -> Curve -> 第一个点 V -> 6.5，第二个点 -> 4，第三个点 -> 12。并连接 DissolvePower。
+17. 创建 Random Number 节点，Min -> 2，Max -> 7。连接 Dissolve Scale。
+
+## 10.5 小火焰
+
+1. 复制 FLAMES，命名为 SMALL。
+2. Constant Spawn Rate -> Rate -> 16。
+3. Set Lifetime Random -> (0.5, 1)
+4. 删除 Set Velocity。
+5. 创建 Set Position，Position -> Z -> 0.5。
+6. Random Number -> Min -> 3，Max -> 9。
+7. Set Size Random -> A -> 1，B -> 3。
