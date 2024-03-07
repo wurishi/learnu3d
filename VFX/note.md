@@ -1,6 +1,6 @@
 Unity 2022.3.16f1
 
-# 1. 风格化火焰特效
+# 1. 火焰特效
 
 ## 1.1 环境
 
@@ -586,3 +586,44 @@ Unity 2022.3.16f1
 5. 创建 Set Position，Position -> Z -> 0.5。
 6. Random Number -> Min -> 3，Max -> 9。
 7. Set Size Random -> A -> 1，B -> 3。
+
+# 11. 风格化火焰
+
+## 11.1 开始
+
+1. 创建 Unlit Shader Graph 命名为 FlameShader，
+   - Allow Material Override -> On
+   - Main Preview -> Quad
+   - Render Face -> Both
+   - Surface Type -> Transparent
+2. 创建 Texture2D 属性 MainTexture，Default -> Default-Particle。连接新节点 Sample Texture 2D。
+3. Sample Texture 2D -> RGBA 连接 Fragment -> Base Color，A 连接 Fragment -> Alpha。
+4. 创建 Color 属性 Color，橙色，Mode -> HDR。连接新节点 Multiply: A。
+5. Sample Texture 2D -> RGBA 连接 Multiply -> B。
+6. Multiply 连接 Fragment -> Base Color 覆盖原有。
+7. 创建 Gradient Noise 节点。
+8. 创建 Tiling And Offset 节点，连接 Gradient Noise -> UV。
+9. 创建 Time 节点，Time 连接新节点 Multiply: B。
+10. 创建 Vector2 节点，Y -> -0.2，连接 9.Multiply -> A。将这个 Multiply 连接 Tiling And Offset -> Offset。
+11. 将 Gradient Noise 连接新节点 Lerp: B，创建 UV 节点连接 Lerp -> A。
+12. 创建 Float 属性 DistortionAmounts，X -> 0.1，连接 Lerp -> T。
+13. Lerp 连接 Sample Texture 2D -> UV。
+
+## 11.2 溶解
+
+1. 复制 Vector2 -> Multiply -> Tiling And Offset 三个节点。Time -> Time 连接到新复制的 Multiply -> B。
+2. 创建 Voronol 节点，将 11.2.1 Tiling And Offset 连接到 Voronol -> UV。
+3. Vector2  -> (-0.1, -0.5)。
+4. Voronol -> Out 连接新节点 Power: A。
+5. Power 连接新节点 Multiply: B。Gradient Noise 连接 Multiply -> A。
+6. 将 5.Multiply 连接新节点 Multiply: B，再将 Sample Texture 2D -> RGBA 连接 Multiply -> A。
+7. 将 11.2.6 Multiply 连接 11.1.4 Multiply -> B 覆盖原有。
+8. 创建 FlameShader 对应的 FlameMat 材质。
+9. 在场景创建 Quad，并将 FlameMat 赋于给它。
+
+## 11.3 创建属性
+
+1. 将 11.1.10 Vector2 转换成属性 DistortionSpeed。11.2.3 Vector2 转换成属性 DissolveSpeed。
+2. 创建 Float 属性 DissolveScale，X -> 2。连接 Voronol -> CellDensity。
+3. 创建 Float 属性 DistortionScale，X -> 5。连接 Gradient Noise -> Scale。
+4. 创建 Float 属性 DissolveAmounts，X -> 1.2。连接 Power -> B。
