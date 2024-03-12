@@ -651,4 +651,126 @@ Unity 2022.3.16f1
 7. 将 1.Smoothstep 连接新节点 Multiply: A，12.2.6 Multiply 连接这个 Multiply -> B。
 8. 将 12.2.5 Multiply 连接新节点 Add: A，12.2.7 Multiply 连接这个 Add -> B。再将这个 Add 连接 Fragment -> Emission 覆盖原有。
 
-# 13.
+# 13. 卡萨丁技能特效 （未完成）
+
+## 13.1 开始 （需要特制材质）
+
+1. 创建 Visual Effect Graph 命名为 vfxgraph_KassadinSlash，并拖入场景。
+2. 编辑 vfxgraph，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+3. 删除 Output Particle Quad，Update Particle 连接新 Output Particle Mesh block，并指定 Mesh。
+4. 创建 Set Size，Size -> 1。
+5. 删除 Set Velocity Random。修改 Set Lifetime， Random -> Off，Lifetime -> 1。
+6. 添加 Set Angle，设置角度让 Mesh 平铺。
+
+# 14. 小型爆炸
+
+## 14.1 使用普通的粒子系统
+
+1. 创建空物体，命名为 vfx_EasyExplosion，Reset Transform，Position -> Y -> 2。
+2. 在 vfx_EasyExplosion 下创建 Effects -> Particle System，命名为 Sparks：
+   - Looping -> Off
+   - Start Lifetime -> Random -> (0.2, 0.8)
+   - Start Speed -> Random -> (2, 20)
+   - Emission
+     - Rate over Time -> 0
+     - Bursts -> Count -> Random -> (15, 25)
+   - Shape
+     - Shape -> Sphere
+     - Radius -> 0.2
+   - Start Size -> Random -> (0.05, 0.4)
+   - Renderer
+     - Render Mode -> Stretched Billboard
+     - Speed Scale -> 0.03
+3. 创建材质 Particle_Orange
+   - Shader -> Universal Render Pipeline / Particle / Unlit
+   - Emission -> On
+   - Emission Map -> 橙色 Intensity -> 2
+   - Base Map -> Default-Particle
+   - Surface Type -> Transparent
+4. Sparks -> Renderer -> Material -> Particle_Orange。
+5. Sparks -> Size over Lifetime -> Size -> 从大到小弧线
+
+## 14.2 闪光
+
+1. 在 vfx_EasyExplosion 下创建 Effects -> Particle System，命名为 Flash：
+   - Looping -> Off
+   - Start Lifetime -> 0.1
+   - Start Speed -> 0
+   - Start Size -> 5
+   - Emission
+     - Rate over Time -> 0
+     - Bursts -> Count -> 1
+   - Shape -> Off
+   - Size over Lifetime -> On，Size -> 从大到小斜线
+   - Renderer -> Material -> Particle_Orange
+
+## 14.3 火焰和烟雾
+
+1. 在 vfx_EasyExplosion 下创建 Effects -> Particle System，命名为 Fire：
+   - Start Lifetime -> Random -> (0.2, 0.4)
+   - Start Speed -> Random -> (0.5, 3)
+   - Start Size -> Random -> (0.5, 1.5)
+   - Looping -> Off
+   - Emission
+     - Rate over Time -> 0
+     - Bursts -> Count -> 10
+   - Shape -> Shape -> Sphere，Radius -> 0.2
+   - Size over Lifetime -> On，Size -> 从大到小抛物线
+   - Renderer -> Material -> Particle_Orange
+2. 复制 Fire 命名为 Smoke，
+   - Renderer -> Order in Layer -> -1
+   - Start Color -> 黑色
+   - Start Lifetime -> (0.4, 0.6)
+   - Start Speed -> (0.5, 2)
+   - Start Size -> (1.5, 2)
+3. 复制 Particle_Orange 命名为 Particle_Dark，Emission -> Off，并且设置给 Smoke -> Renderer -> Material。
+
+## 14.4 使用 VFX
+
+1. 场景上创建空对象，vfxgraph_EasyExplosion
+2. 创建 Visual Effect Graph，命名为 vfxgraph_Explosion，并拖到 vfxgraph_EasyExplosion 下，Reset Transform。
+3. 编辑 vfxgrqaph_Explosion，删除 Constant Spawn Rate，创建 Single Burst。
+4. 创建 Random Number 节点，并连接到 Single Burst -> Count
+   - Seed -> Per Component
+   - Constant -> Off
+   - Min -> 15
+   - Max -> 25
+5. 全选所有节点组成 SPARK。
+6. 删除 Set Velocity Random，创建 Set Position(Sphere)，Arc Shpere -> Sphere -> Radius -> 0.1
+7. 创建 Set Velocity from Direction & Speed (Spherical)，
+   - Speed Mode -> Random
+   - Min Speed -> 5
+   - Max Speed -> 19
+8. Set Lifetime Random -> (0.4, 0.7)
+9. Main Texture -> Default-Particle。
+10. Set Size over Life -> Composition -> Multiply，Size -> 从上到下的弧线。
+11. 删除 Set Color over Life，创建 Set Color，橙色，Intensity 加强。
+12. 在 Multiply Size over Life 前创建 Set Size，Random -> Uniform，AB -> (0.1, 1)
+13. 在 Set Size 前创建 Set Scale，Random -> Uniform，A -> (0.2, 1, 1)，B -> (0.8, 2, 1)
+14. Orient -> Mode -> Along Velocity。
+15. Output Particle Quad 命名为 SPARKS。
+
+## 14.5 VFX Flash
+
+1. 创建 Simple Particle System，组名为 FLASH，它的 Output Particle Quad 命名为 FLASH。
+2. 删除 Set Velocity Random，Set Lifetime Random -> Random -> Off，Lifetime -> 0.1。
+3. 删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+4. MainTexture -> Default-Particle。
+5. 创建 Set Size，Size -> 8。
+6. Set Size over Life -> Composition -> Multiply。Size -> 从大到小的斜线。
+7. 删除 Set Color over Life。
+8. 按住 Ctrl，从 SPARKS 拖出 Set Color block 到 FLASH，可以实现复制 block。
+
+## 14.6 VFX Fire and Smoke
+
+1. 创建 Simple Particle System，组名为 FIRE，Output Particle Quad 命名为 FIRE。
+2. 删除 Constant Spawn Rate，创建 Single Burst，创建 Random Number，Min -> 10，Max -> 12，并连接到 Single Burst -> Count。
+3. 删除 Set Velocity Random，Set Lifetime -> (0.2, 0.4)。
+4. 从 SPARKS 复制 Set Position 和 Set Velocity 到 FIRE。Set Velocity -> Min & Max Speed -> (0.5, 2.5)
+5. Main Texture -> Default-Particle。Set Size over Life -> Composition -> Multiply，Size -> 从大到小的抛物线。
+6. 创建 Set Size，Random -> Uniform，AB -> (1.25, 2.25)。
+7. 删除 Set Color over Life，并从 FLASH 复制 Set Color 到 FIRE。
+8. 复制 FIRE 命名为 SMOKE，Output Particle Quad 命名为 SMOKE。
+9. Set Color -> 黑色，Set Size Random -> (1.75, 3)，Set Lifetime Random -> (0.4, 0.6)，Set Velocity from -> Min & Max Speed -> (0.25, 2)。
+10. vfxgraph_Explosion -> Inspector -> Output Render Order -> SMOKE 拖到顶部。
+
