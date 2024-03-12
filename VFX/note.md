@@ -774,3 +774,57 @@ Unity 2022.3.16f1
 9. Set Color -> 黑色，Set Size Random -> (1.75, 3)，Set Lifetime Random -> (0.4, 0.6)，Set Velocity from -> Min & Max Speed -> (0.25, 2)。
 10. vfxgraph_Explosion -> Inspector -> Output Render Order -> SMOKE 拖到顶部。
 
+# 15. 将 2 个物体连接起来的特效
+
+## 15.1 开始
+
+1. 创建空物体名为 vfx_ElectricArc，Reset Transform，Y -> 2。
+2. 创建 Visual Effect Graph，名为 vfxgraph_ElectricArc，并拖到 vfx_ElectricArc 下。
+3. 编辑 vfxgraph_ElectricArc，Bounds Mode -> Manual。
+4. 删除 Constant Spawn Rate，创建 Single Burst，Count -> 100。
+5. Capacity -> 150，删除 Set Velocity Random 和 Set Lifetime Random，创建 Set CustomAttribute。
+   - Attribute -> Progress
+6. 创建 Get Attribute: spawnIndex 节点，连接新节点 Divide，B -> 100。将 Divide 连接 Set Progress -> Progress。
+7. 在 Update Particle 创建 Set Position，创建 Get CustomAttribute，Attribute -> Progress，并连接到 Set Position -> Position。
+8. 创建 Sample Bezier 节点，将 Get Progress 连接到 T，再将 Sample Bezier -> Position 连接到 Set Position -> Position 覆盖原有。(A: 0 0 0 B: 1 0 0 C: 2 0 0 D: 3 2 0)。ABCD 都是 World。
+9. Initialize Particle -> Data Type -> Particle Strip。
+10. Update Particle Strip 连接新 Output ParticleStrip Quad，并删除 Output Particle Quad。
+11. 修改 Single Burst -> Count -> 200， Particle Per Strip Count -> 200，Divide -> B -> 200，
+12. 创建 Get Attribute: spawnIndexInStrip 节点，连接 Divide -> A。
+13. Main Texture -> Default-ParticleSystem。
+14. 创建 Set Size，创建 float 属性 Thickness，Value -> 0.1，连接 Set Size -> Size。
+15. 创建 Set Color，创建 Color 属性 Color，蓝色，并连接 Set Color -> Color。
+
+## 15.2 控制贝塞尔曲线
+
+1. 创建四个 Vector3 属性 Pos1, Pos2, Pos3, Pos4。并一一连接 Sample Bezier -> ABCD。
+2. 场景上的 vfxgraph_ElectricArc -> Inspector 添加 VFX Property Binder 脚本。
+   - vfx_ElectricArc 创建空物体，命名为 Pos1。
+   - 创建 Transform -> Position，Property -> Pos1，Transform -> Pos1。
+   - 重复设置 Pos2, Pos3, Pos4。
+3. Update Particle Strip 中创建 Add Position。
+4. 创建 Value Noise 3D 节点。
+5. 创建 Get Attribute: position 节点，连接 Value Noise 3D -> Coordinate。Value Noise 3D -> Derivatives 连接 Add Position -> Position。
+6. 创建 Add 节点，Get Attribute: position 连接到 Add -> A。
+7. 创建 Total Time 节点，连接 Add -> B。Add 连接 Value Noise 3D -> Coordinate 覆盖原有。
+8. Total Time 连接新节点 Multiply。
+9. 创建 float 属性 NoiseSpeed，Value -> 2，连接 Multiply -> B。
+10. Multiply 连接 Add -> B 覆盖原有。
+11. 创建 float 属性 NoisePower，Value -> 0.1，连接 Value Noise 3D -> Range -> X。
+12. NoisePower 连接新节点 Negate，Negate 连接 Value Noise 3D -> Range -> Y。
+13. 创建 float 属性 NoiseFrequency，Value -> 1，连接 Value Noise 3D -> Frequency。
+
+## 15.3 火花
+
+1. 在 vfxgraph_ElectricArc 中创建 Simple Particle System，Bounds Mode -> Manual。
+2. 创建 Set Position Sphere，Arc Sphere -> World。Arc Sphere -> Sphere -> Radius -> 0.1。
+3. Pos1 连接 Set Position Sphere -> Arc Shpere -> Sphere -> Transform -> Position。
+4. 删除 Set Velocity Random。创建 Set Velocity from Direction & Speed (Spherical)，Speed Mode -> Random，Min & Max Speed -> (5, 18)。Direction Blend -> 0。
+5. Set Lifetime Random -> (0.05, 0.2)。Capacity -> 1000。Rate -> 50。
+6. Output Particle Quad 创建 Set Size，Random -> Uniform，AB -> (0.05, 0.2)。
+7. Set Size over Life -> Composition -> Multiply，Size -> 从大到小抛物线。
+8. 创建 Set Scale，Random -> Uniform。AB -> (0.3, 1, 1)-(0.8, 2, 1)。
+9. Orient -> Along Velocity。MainTextulre -> Default-Particle。
+10. 创建 Set Color。
+11. Color 属性连接新节点 Multiply，Multiply -> B -> 3。
+12. Set Color over Life，Composition -> Multiply。
