@@ -653,7 +653,7 @@ Unity 2022.3.16f1
 
 # 13. 卡萨丁技能特效 （未完成）
 
-## 13.1 开始 （需要特制材质）
+## 13.1 开始（需要特制材质）
 
 1. 创建 Visual Effect Graph 命名为 vfxgraph_KassadinSlash，并拖入场景。
 2. 编辑 vfxgraph，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
@@ -828,3 +828,135 @@ Unity 2022.3.16f1
 10. 创建 Set Color。
 11. Color 属性连接新节点 Multiply，Multiply -> B -> 3。
 12. Set Color over Life，Composition -> Multiply。
+
+# 16. 电弧喷射
+
+## 16.1  开始
+
+1. 创建空对象 vfx_ElectricityDirectional，Reset Transform。Position -> (0, 1.5, -1)。
+2. 创建 Visual Effect Graph 名为 vfxgraph_ElectricityDirectional，并拖到 vfx_ElectricityDirectional 下，Position -> (0, 0, 0)
+3. 编辑 vfxgraph_ElectricityDirectional，Set Velocity Random -> (-0.33, 0.2, 5) - (0.33, 1, 10)。
+4. 创建 Set Position Cone，创建 Cone 属性 Cone，并连接 Set Position Cone -> Cone。Cone -> Transform -> Angles -> X -> 90，Base Radius -> 0.01，Top Radius -> 0.05。
+5. 在 Update Particle 中创建 Trigger Event Rate，Rate -> 30。
+6. 删除 Output Particle Quad。
+7. 创建 Simple Head and Trails，删除左半部，剩下 GPUEvent 和 Trail。
+8. Trigger Event Rate 连接 GPUEvent。
+9. Strip Capacity -> 256，Particle Per Strip Count -> 16，Bounds Mode -> Manual。
+10. 删除 Inherit Source Color 和 Set Lifetime。创建 Inherit Source Lifetime。
+11. 删除 Turbulence 和 Subpixel Anti-Aliasing。
+12. 回到原来的 Particle System，Set Velocity Random -> Random -> Off。
+13. 创建 Get Attribute: Position 节点，连接新节点 Multiply。Multiply 连接 Set Velocity -> Velocity。
+14. 创建 float 属性 Speed，Value -> 35，连接 Multiply -> B。
+15. 创建 float 属性 Lifetime，Value -> 0.4，连接 Set Lifetime Random -> B。
+16. Lifetime 连接新节点 Multiply，Multiply -> B -> 0.2。Multiply 连接 Set Lifetime Random -> A。
+17. 来到 Trail Bodies，创建 Set Color 和 Set Color over Life。
+18. Set Color over Life 的 Composition 和 Alpha Composition -> Multiply。
+19. 创建 Color 属性 Color，颜色为蓝色，Intencity 加深。连接 Set Color -> Color。
+
+## 16.2 嗓点
+
+1. 回到原来的 Particle System -> Update Particle。创建 Add Position。
+2. 创建 Value Noise 3D 节点，Derivatives 连接 Add Position -> Position。Range -> (-0.05, 0.05)。Frequency -> 10。Octaves -> 3，Roughness -> 1，Lacunarity -> 2。
+3. 创建 Get Attribute: position 节点，连接 Value Noise 3D -> Coorinate。
+4. 创建 float 属性 NoisePower，Value -> 0.05，连接 Value Noise 3D -> Range -> Y。
+5. NoisePower 连接新节点 Negate，Negate 连接 Value Noise 3D -> Range -> X。
+6. 创建 float 属性 Rate，Value -> 32，连接 Rate。
+7. Capacity -> 100，Bounds Mode -> Manual。两组的 Initialize Particle -> World。
+8. 暂时删除 Velocity 的连线，并禁用 Add Position。
+9. 创建 Get Attribute: direction 代替 Get Attribute: Position。
+10. 恢复 Velocity 连线，启用 Add Position，Position -> World。
+
+## 16.3 电火花
+
+1. 将 16.1.4 Set Position Cone 替换成 Set Position Sphere。
+   - Arc Sphere -> Local
+   - Arc Shpere -> Sphere -> Radius -> 0.1
+2. Speed -> 3
+
+# 17. 风格化光束 (未完成)
+
+## 17.1 开始（需要材质）
+
+1. 创建空对象，vfx_StylizedBeam，Reset Transform，Y -> 2。
+2. 创建 Visual Effect Graph，vfxgraph_StylizedBeam，并作为 vfx_StylizedBeam 的子物体拖到场景中。
+3. 编辑 vfxgraph_StylizedBeam，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+4. 删除 Output Particle Quad，Update Particle 连接新 block，Output Particle Mesh。
+5. 创建 Set Size，Size -> 3。
+6. 删除 Set Velocity，创建 Set Angle，Set Lifetime -> Random -> Off，Lifetime -> 3。
+7. 创建 float 属性 Duration，Value -> 3，连接 Set Lifetime -> Lifetime。
+
+# 19. 火雨术
+
+## 19.1 开始
+
+1. 创建 Visual Effect Graph，vfxgraph_MeteorRain。并拖入场景。
+2. 编辑 vfxgraph_MeteorRain，创建 Set Position Cone。
+3. 创建 float 属性 Radius，Value -> 5，连接 Set Position Cone -> Arc Cone -> Cone -> Base Radius 和 Top Radius。Position Mode -> Volume（Surface 只会出现在圆柱体边缘，Volume 可以出现在整个圆柱体范围内）。
+4. 创建 Vector3 属性 InitialPosition，Y -> 10，连接 Set Position Cone -> Arc Cone -> Cone -> Transform -> Position。
+5. 创建 float 属性 Rate，Value -> 5，连接 Constant Spawn Rate -> Rate。
+6. 创建 Vector3 属性 Direction，Value -> (0, -25, 10)，连接 Set Velocity Random -> B。
+7. Direction 连接新节点 Multiply，Multiply -> B -> 0.8，连接 Set Velocity Random -> A。
+8. 创建 float 属性 MeteorLifetime，Value -> 3，连接 Set Lifetime Random -> A 和 B。
+9. 在 Update Particle 中创建 Trigger Event Rate。
+10. 创建 Simple Ribbon system，删除它的 Spawn，创建 GPUEvent 节点，连接 Ribbon 的 Initialize Particle Strip，Trigger Event Rate 连接 GPUEvent -> Evt。
+11. 删除 Ribbon -> Turbulence，删除原来 Particle 的 Set Size over Life，创建 Set Size，Size -> 1。
+12. Ribbon -> Strip Capacity -> 1000，Particle Per Strip Count -> 100。删除 Add Position Circle，创建 Inherit Source Position。
+13. 创建 float 属性 TrailLifetime，Value -> 0.4，连接 Set Lifetime -> Lifetime。
+14. 删除原有 System 的 Update Particle 和 Output Particle Quad 的连接。
+15. Set Size over Life -> Size -> 从大到小的 S 型曲线。Orient -> Mode -> Face Camera Position。
+16. Trigger Event Rate -> Mode -> Over Distance。
+17. 删除 Set Color，Set Color over Life -> Color -> 深红到黑色。
+18. Blend Mode -> Alpha。
+19. 创建 Set Size，Set Size over Life -> Composition -> Multiply。
+20. 创建 float 属性 TrailSize，Value -> 0.8，连接 Set Size -> Size。
+
+## 19.2 前景
+
+1. 将 GPU 前的所有节点组成 METEORS，剩余节点组成 TRAIL_BACK。
+2. 复制 TRAIL_BACK，名为 TRAIL_FRONT。
+3. TRAIL_FRONT 中的 TrailSize 连接新节点 Multiply，Multiply -> B -> 0.45，连接 Set Size -> Size 覆盖原有。Set Color over Life -> Color -> 金黄到红色。(第一个键的 Intensity -> 10，第二个为 4 左右)
+4. Trigger Event Rate 连接 TRAIL_FRONT 的 GPUEvent。
+5. 创建 Texture2D 属性 TrailTexture，Value -> Default-Particle，分别连接 TRAIL_FRONT 和 TRAIL_BACK 的 MainTexture。
+6. TRAIL_FRONT 的 TrailLifetime 连接新节点 Multiply，Multiply -> B -> 0.5，连接 Set Lifetime -> Lifetime 覆盖原有。
+
+## 19.3 火花
+
+1. 在 METEORS 中创建 Collide with Plane，Lifetime Loss -> 1。
+2. 创建 Trigger Event On Die，Count -> 10。
+3. 创建 Simple Particle System，删除 Spawn block，Initialize Particle 顶部连接新节点 GPUEvent，Trigger Event On Die 连接这个 GPUEvent -> evt。
+4. 创建 Inherit Source Position。
+5. Capacity -> 100。
+6. Set Lifetime Random -> (0.3, 0.8)
+7. Set Velocity Random -> (5, 2, 5) - (-5, 7, -5)
+8. MainTexture -> Default-Particle，Orient -> Mode -> Along Velocity。
+9. 创建 Set Scale，Random -> Per Component，XY -> (0.1, 0.5, 1) - (0.3, 1, 1)。
+10. 创建 Set Size，Random -> Uniform，AB -> (0.8, 1.2)。
+11. Set Size over Life -> Composition -> Multiply。Size -> 从大到小抛物线。
+12. Set Color over Life -> Color 复制 TRAIL_FRONT 的 Color。
+13. Blend Mode -> Additive。
+14. 创建 Gravity。创建 Random Number 节点，Max -> -10，连接 Gravity -> Force -> Y。
+15. 将这些节点组为 SPARKS。
+
+## 19.4 地面效果
+
+1. 创建 Simple Particle System，组名 IMPACT_DECAL。
+2. 删除 Output Particle Quad，Update Particle 连接新 Output Particle Forward Decal。
+3. 创建 Set Size，Random -> Uniform，AB -> (1.5, 3.3)。
+4. 创建 Set Angle，X -> 90。
+5. MainTexture -> Default-Particle。复制 SPARKS 的 Set Color over Life 到 IMPACT_DECAL。Color -> 深红到黑。
+6. 删除 Set Velocity Random 和 Spawn，Initialize Particle 顶点连接新节点 GPUEvent，
+7. 创建 Trigger Event On Die，Count -> 1，连接 6.GPUEvent。
+8. 创建 Inherit Source Position。
+9. 复制 Output Particle Forward Decal，Update Particle 连接它。
+10. Set Size Random -> (1, 2.5)
+11. Set Color over Life -> Color -> 亮金到红，50% Alpha 0。
+12. Blend Mode -> Additive。
+
+# 20. 粒子特效跟随路线轨迹（未完成）
+
+## 20.1 需要材质和第三方插件
+
+# 21. 魔法球
+
+## 21.1 开始
+
