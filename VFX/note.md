@@ -1010,3 +1010,35 @@ Unity 2022.3.16f1
 2. 创建 Time 节点，连接新节点 Multiply: A。
 3. 创建 Vector2 属性 MainTexSpeed，连接 2.Multiply -> B。Multiply 连接 Tiling And Offset -> Offset。
 4. 回到 vfxgraph_Orb，设置 MainTexSpeed -> (0.6, -0.1)。
+
+# 23. 围绕的拖尾小球
+
+## 23.1 开始
+
+1. 创建 Visual Effect Graph, 命名为 vfxgraph_orbs，并拖入场景。
+2. 编辑 vfxgraph_orbs，创建 Set Position (Sequential: Circle)，Mode -> Wrap。Normal -> (0, 1, 0)，Up -> (1, 0, 0)，Count -> 3。
+3. 删除 Set Velocity Random，创建 Single Burst，Count -> 3。Constant Spawn Rate -> Off。
+4. 删除 Set Color over Life，删除 Set Lifetime Random，删除 Set Size over Life。创建 Set Size -> 0.66。MainTexture -> Default-Particle。Blend Mode -> Additive。
+5. 创建 Set Color，设置颜色。
+6. 创建 int 节点，Value -> 3，连接 Single Burst -> Count 和 Set Position -> Count。
+7. Update Particle 中创建 Set Position，创建 Rotate 3D 节点，它的 X 和 Z 连接到 Set Position -> Position 的 X 和 Z，创建 Get Attribute: Position，连接到 Rotate 3D -> Position。
+8. 创建 Delta Time (VFX) 节点，连接新节点 Multiply，连接到 Rotate 3D -> Angle。Multiply -> B 连接新节点 float，float 节点 Convert to Exposed Property 转换成属性 RotationSpeed，Value -> 2。
+9. 创建 Perlin Noise 2D，Noise 连接到 Set Position -> Position -> Y。
+10. 创建 Get Attribute: position，Get Attribute: position -> X 和 Z , 连接新节点 Vector2 的 X 和 Y。Vector2 连接 Perlin Noise 2D -> Coordinate。Perlin Noise 2D -> Range -> (-0.2, 0.2)。Frequency -> 0.6，Roughness -> 1。
+11. 创建 Trigger Event Rate，Rate -> 60。连接新节点 GPUEvent，GPUEvent 连接新节点 Initialize Particle Strip，然后连接 Update Particle Strip，再连接 Output ParticleStrip Quad。
+12. Strip Capacity -> 12，创建 Inherit Source Position，创建 Set Lifetime，Lifetime -> 0.7。
+13. 创建 Orient: Face Camera Position，Main Texture -> 合适的拖尾纹理。
+14. 创建 Set Color over Life，设置颜色。
+
+## 23.2 Shader
+
+1. 创建 Shader Graph -> VFX Shader Graph，命名为 OrbsShader。
+2. 修改 OrbsShader，创建 Sample Texture 2D 节点，Texture 连接新节点 Texture 2D Asset，选择之前拖尾使用的纹理。RGBA 连接 Fragnemt -> BaseColor。UV 连接新节点 Tiling And Offset。
+3. 创建 Time 节点，Time 连接 Multiply: A，Multiply 连接 Tiling AndOffset -> Offset。Multiply -> B 连接新节点 Vector2，Vector2 -> X -> 1。
+4. Vector2 转换成属性 ScrollSpeed。Texture 2D Asset 转换成属性 Texture。
+5. Sample Texture 2D -> RGBA 连接新节点 Multiply: B，Multiply 连接 Fragment -> BaseColor。Multiply -> A 连接新节点 Color，并转换为属性 Color。
+6. Sample Texture 2D -> RGBA 再连接新节点 Multiply: B，Multiply -> A 连接新节点 Float，Float 转换成属性 Alpha，Value -> 1。Multiply 连接 Fragment -> Alpha。
+7. 回到 vfxgraph_orbs，拖尾的 Shader Graph -> OrbsShader。
+8. 创建 Set Size，Size -> 1。创建 Multiply Size over Life，Size -> 从大到小抛物线。
+9. 创建 Get Attribute: color 连接到 vfx -> Color。创建 Get Attribute: alpha 连接到 vfx -> Alpha。
+10. 将 int 节点转换成属性 Count。
