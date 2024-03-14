@@ -956,7 +956,57 @@ Unity 2022.3.16f1
 
 ## 20.1 需要材质和第三方插件
 
-# 21. 魔法球
+# 21. URP 和 HDRP 制作空间扭曲
 
-## 21.1 开始
+# 22. 魔法球
 
+## 22.1 开始
+
+1. 创建 Visual Effect Graph，vfxgraph_Orb，并拖入场景，Y -> 1.8。
+2. 编辑 vfxgraph_Orb，创建 float 属性 Duration，Value -> 10。
+3. Spawn system -> Loop Duration 和 Loop Count -> Constant，Duration 属性连接 Loop Duration。
+4. Constant Spawn Rate -> Rate -> 2。
+5. 创建 Single Burst，Count -> 1。
+6. 删除 Set Velocity Random，Set Lifetime Random -> Random -> Off，Bounds Mode -> Manual，MainTexture -> Default-Particle。
+7. 删除 Set Size over Life ，创建 Set Size，Size -> 5。Use Soft Particle -> On。
+8. Set Color over Life -> Color -> Alpha2 L -> 22%，Alpha3 L -> 72%，Color1 -> HSV(251, 94, 9) ，删除 Color2。
+9. Output Particle Quad 命名为 FLARE_DARK，复制所有节点组名为 DARK，新 Output Particle Quad 命名为 FLARE_BRIGHT。
+10. Set Size -> 2，Set Color over Life -> Color -> Alpha2 L -> 12%，Alpha3 L -> 54%，Color1 -> HSV(254, 91, 86) Intencity -> 5，Color2 -> 白色。
+
+## 22.2 飘浮物体
+
+1. 创建 Simple Particle System，Output Particle Quad 命名为 PARTICLES_FLOATING。
+2. MainTexture -> Default-Particle，在 Set Size over Life 前创建 Set Size，Random -> Uniform，AB -> (0.01, 0.05)，Set Size over Life -> Composition -> Multiply，Size -> 从大到小抛物线。
+3. 删除 Set Color over Life，创建 Set Color，Color -> HSV(254, 88, 98)，Intensity -> 8.6。
+4. 删除 Set Velocity Random，创建 Set Position Sphere，Arc Sphere -> Sphere -> Radius -> 0.4。
+5. 创建 Turbulence，创建 Random Number 节点，Min/Max -> (0.5, 3)，Frequency -> 10，连接 Turbulence -> Intensity。
+6. Spawn system -> Loop Duration 和 Loop Count -> Constant，Duration 属性连接 Loop Duration。
+
+## 22.3 外部旋转
+
+1. 复制 DARK，命名为 OUTSIDE，删除 Constant Spawn Rate，Spawn system -> Loop Duration 和 Loop Count -> Infinite，Duration 属性连接 Set Lifetime。
+2. 删除 Output Particle Quad，Update Particle 连接新模块 Output Particle Mesh，Mesh -> Sphere。
+3. 创建 Set Size，Size -> 1。
+
+## 22.4 Shader
+
+1. Create -> Shader Graph -> URP -> Unlit Shader Graph，命名为 ShaderOrb。
+2. 编辑 ShaderOrb，Allow Material Override -> On，Render Face -> Both，Alpha Clipping -> On，Support VFX Graph -> On。
+3. 创建 Color 属性 FrontColor 和 BackColor，都为白色，Alpha -> 100，Mode -> HDR。
+4. 创建 Texture2D 属性 MainTex，连接新节点 Sample Texture 2D，Sample Texture 2D -> RGBA 连接新节点 Power: A。
+5. 创建 float 属性 MainTexPower，X -> 1，连接 Power -> B。
+6. FrontColor 连接新节点 Multiply: A，Power 连接 Multiply -> B。Multiply 连接 Fragment -> BaseColor。
+7. BackColor 连接新节点 Multiply: A，Power 连接 Multiply -> B。
+8. Power 连接 Fragment -> Alpha。
+9. 创建 float 属性 Clip，Mode -> Slider，连接 Fragment -> Alpha Clip Threshold。
+10. 创建 Is Front Face 节点，连接新节点 Branch: Predicate，FrontColor -> Multiply 连接 Branch -> True，BackColor -> Multiply 连接 Branch -> False，Branch 连接 Fragment -> BaseColor 覆盖原有。
+11. 回到 vfxgraph_Orb，OUTSIDE -> Shader Graph -> ShaderOrb，Main Tex -> （类似 Voronoi 的纹理）。
+12. 创建 Set Angle，Angle 调整纹理的角度。
+13. 设置 Front Color，Back Color，MainTex，调整 Clip 值。
+
+## 22.5 旋转
+
+1. 编辑 OrbShader，创建 Tiling And Offset 连接 Sample Texture 2D -> UV。
+2. 创建 Time 节点，连接新节点 Multiply: A。
+3. 创建 Vector2 属性 MainTexSpeed，连接 2.Multiply -> B。Multiply 连接 Tiling And Offset -> Offset。
+4. 回到 vfxgraph_Orb，设置 MainTexSpeed -> (0.6, -0.1)。
