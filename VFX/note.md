@@ -1042,3 +1042,67 @@ Unity 2022.3.16f1
 8. 创建 Set Size，Size -> 1。创建 Multiply Size over Life，Size -> 从大到小抛物线。
 9. 创建 Get Attribute: color 连接到 vfx -> Color。创建 Get Attribute: alpha 连接到 vfx -> Alpha。
 10. 将 int 节点转换成属性 Count。
+
+# 25. 角色表面发射粒子
+
+## 25.1 开始
+
+1. 创建 Visual Effect Graph，命名为 vfxgraph_CharacterEffect，并拖入场景。
+2. 编辑 vfxgraph_CharacterEffect，Bounds Mode -> Manual。
+3. 创建 Set Position (Skinned Mesh)，创建 SkinnedMeshRenderer 属性 SkinnedMeshRenderer，连接 Skinned Mesh。
+4. 在 Set Position (Skinned Mesh) 之后创建 Set Position，创建 Transform (Position) 节点，并连接到 Set Position -> Position。
+5. 创建 Transform 属性 Transform，连接 Transform (Position) -> Transform。创建 Get Attribute: Position 节点连接 Transform (Position) -> Position。
+6. 选中场景中的 vfxgraph_CharacterEffect，SkinnedMeshRenderer 指定场景中的 Mesh。
+7. Add Component -> VFX Property Binder，添加 Transform -> Transform，并指定 Traget。
+8. 回到 vfxgraph_CharacterEffect 编辑界面，Constant Spawn Rate -> 1000，Capacity -> 100000。
+9. Set Velocity Random -> (0, 0.1, 0) - (0, 0.4, 0)，Set Lifetime Random -> (0.15, 0.6)。
+10. 创建 Set Size，Random -> Uniform，AB -> (0.015, 0.03)。Set Size over Life -> Composition -> Multiply，Size -> 从大到小抛物线。
+11. Main Texture -> Default-Particle。Set Color over Life 的 Composition 和 Alpha Composition -> Multiply。
+12. 创建 Set Color，创建 Color 属性 ParticleColor，连接 Set Color -> Color。
+
+## 25.2 烟雾（未完成，需要素材）
+
+# 26. 武器表面流光
+
+## 26.1 开始
+
+1. 创建 Lit Shader Graph，命名为 SwordShader。
+2. 编辑 SwordShader，创建 Color 属性 Color，颜色 -> 白色，Alpha -> 100，Mode -> HDR。连接新节点 Multiply: A。
+3. 创建 Texture2D 属性 MainTex，连接新节点 Sample Texture 2D，然后 Sample Texture 2D -> RGBA 连接 Multiply -> B。
+4. Multiply 连接 Fragment -> BaseColor。
+5. 创建 Float 属性 Metallic，X -> 0.5，连接新节点 Multiply: A。
+6. 创建 Texture2D 属性 MetallicMap 连接新节点 Sample Texture 2D，它的 RGBA 连接 5.Multiply -> B。该 Multiply 连接 Fragment -> Metallic。
+7. 创建 Float 属性 Smoothness，X -> 0.5，连接 Fragment -> Smoothness。
+8. 创建的这些节点组为 PBR_SETUP。
+9. 创建 Gradient Noise，连接新节点 Clamp: in，该 Clamp 连接新节点 Power: A，Power 连接 Add: A。MainTex -> Sample Texture 2D -> RGBA 连接 Add -> B。该 Add 连接 Fragment -> Emission。
+10. 创建 Float 属性 GradientNoiseScale，X -> 15， 连接 Gradient Noise -> Scale。
+11. 创建 Float 属性 GradientNoisePower，X -> 5，连接 Power -> B。
+12. 创建 Color 属性 GradientNoiseColor，白色，Alpha -> 100，Mode -> HDR。连接新节点 Multiply: A，Power 连接该 Multiply -> B。该 Multiply 连接 Add -> A，覆盖原有。
+13. 创建 Time 节点，Time 连接新节点 Multiply: A，创建 Vector2 属性 GradientNoiseSpeed，Value -> (0, 0.2)，连接 Multiply -> B。该 Multiply 连接新节点 Add: A，创建 UV 节点连接 Add -> B。Add 连接 Gradient Noise -> UV。
+14. 创建 Texture2D 属性 Mask，Default -> 只包含效果部分的纹理，连接新节点 Sample Texture 2D，RGBA 连接新节点 Multiply: A，Power 连接 Multiply -> B，该 Multiply 连接 12.Multiply -> B，覆盖原有。
+15. 基于 SwordShader 创建材质 SwordMat，并赋给模型。
+
+## 26.2 VFX
+
+1. 创建 Visual Effect Graph，命名为 vfxgraph_Sword，并拖入场景。
+2. 编辑 vfxgraph_Sword，MainTexture -> Smoke8x8，Uv Mode -> Flipbook Blend，Flip Book Size -> (8, 8)。
+3. 创建 Set Size，Random -> Uniform，XY -> (0.2, 0.6)，Seet Size over Life -> Composition -> Multiply。
+4. 创建 Add Tex Index over Life，Tex Index -> 从小到大的斜线，最后一个点的 value -> 63 （8x8-1)。
+5. 创建 Color 属性 SmokeColor，红色。创建 Set Color，SmokeColor 连接 Set Color -> Color。
+6. Set Color over Life 的 Composition 和 Alpha Composition -> Multiply，调整 Color 的 Alpha 让它消失的更快。
+7. 删除 Set Velocity Random，创建 Set Position AABox，调整 Center 和 Size，让 Box 差不多包裹模型。
+8. Rate -> 20，Capacity -> 1000，Use Soft Particle -> On，Soft Particle Fade Distance -> 0.1。创建 Set Angle，Random -> Uniform，AB 的 Z -> (360, -360)。
+9. 将所有节点组为 SMOKE，并复制它为 PARTICLE。
+10. Uv Mode -> Default，Main Texture -> Default-Particle，Blend Mode -> Additive。
+11. 创建 Color 属性 Particle，蓝色，连接 Set Color -> Color 覆盖原有。
+12. Set Size Random -> (0.04, 0.06)，Set Position AABox 调整尺寸。
+13. Update Particle 创建 Set Position，创建 Rotate 3D 节点，创建 Get Attribute: position 连接 Rotate 3D -> Position，Rotate 3D -> Position 连接 Set Position。
+14. 创建 Random Number，Min/Max -> (0.05, 0.1)，连接 Rotate 3D -> Angle。
+15. Set Lifetime Random -> B -> 1.5。创建 Set Velocity，Random -> Uniform，AB -> (-0.5, 0.75, -0.5) - (0.5, 1.5, 0.5)。
+16. 创建 Trigger Event Rate，Rate -> 20。
+17. 创建 Simple Heads And Trails，删除 GPUEvent 前的节点，Trigger Event Rate 连接 GPUEvent。
+18. Strop Capacity -> 10，Particle Per Strip Count -> 1000。
+19. 删除 Set Lifetime，创建 Inherit Source Size 和 Inherit Source Lifetime。创建 Multiply Lifetime -> 0.2。
+20. 删除 Turbulence，MainTexture -> None，Size over Life -> Composition -> Multiply。
+21. 创建 Set Color over Life，创建 Gradient 属性 TrailGradient，连接 Set Color over Life -> Color。颜色橙到蓝。
+
