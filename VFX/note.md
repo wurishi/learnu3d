@@ -193,7 +193,7 @@ Unity 2022.3.16f1
 8. 创建 Color 属性为 ParticlesColor，颜色为更加强的红色。并连接到 Set Color -> Color，覆盖原有。
 9. 点击 Initialize Particle 右上角的 LOCAL，切换为 WORLD。
 
-# 3. 箭类特效 (未完成)
+# 3. 箭类特效
 
 ## 3.1 初始化
 
@@ -232,9 +232,21 @@ Unity 2022.3.16f1
 13. Initialize Particle 的 Set Velocity Random 的 AB 为 (-0.2, -0.2, -2) - (0.2, 0.2, -10)。
 14. 创建 Set Position (Sphere)。
 
-## 3.4 烟雾 (需要素材)
+## 3.4 烟雾
 
 1. 再创建 Simple Particle System，Output Particle Quad 命名为 SMOKE。
+2. Main Texture -> Smoke8X8，Uv Mode -> FlipBook Blend，Flip Book Size -> 8x8。
+3. 创建 Set Tex Index over Life，Tex Index -> 从小到大的直线，最后一帧 Value -> 63。
+4. St Size over Life -> 从大到小抛物线，最后一帧 Value -> 0.7左右。
+5. Set Color over Life -> Color -> Alpha  调整淡入淡出，Composition 和 Alpha Composition -> Multiply。
+6. 创建 Set Color，Color -> (0.45, 0.66, 0.75)。Intensity 加强。
+7. Blend Mode -> Additive。
+8. 创建 Set Size，Random -> Uniform，AB -> (1.2, 2.6)。Set Size over Life，Composition -> Multiply。
+9. 创建 Set Angle，Random -> Uniform，AB 的 Z -> -360 到 360。
+10. Set Velocity Random -> (-0.2, -0.2, -1) - (0.2, 0.2, -4)。Set Life Random -> B -> 2.5。
+11. 创建 Set Alpha，Random -> Uniform，AB -> (0.1, 0.4)。
+12. Spawn -> Loop Duration 和 Loop Count -> Constant，ArrowLifetime 连接新节点 Multiply，Multiply -> B -> 0.95，连接 Loop Duration。
+13. 对 STRETCHED PARTICLES 的 Spawn 作相同操作。
 
 # 4. 召唤生物类特效
 
@@ -1060,7 +1072,15 @@ Unity 2022.3.16f1
 11. Main Texture -> Default-Particle。Set Color over Life 的 Composition 和 Alpha Composition -> Multiply。
 12. 创建 Set Color，创建 Color 属性 ParticleColor，连接 Set Color -> Color。
 
-## 25.2 烟雾（未完成，需要素材）
+## 25.2 烟雾
+
+1. 将全部节点组为 SKIN，复制一个名为 SMOKE。
+2. Main Texture -> Smoke8X8，Uv Mode -> Flipbook Blend，Flip Book Size -> 8X8。
+3. 创建 Set Tex Index over Life -> Size -> 从小到大直线，最后一帧 Value -> 63。
+4. 删除 ParticleColor 属性节点，Set Size -> (0.5, 1)，Set Lifetime Random -> (1, 3)。Rate -> 16。
+5. Use Soft Particle -> On，Soft Particle Fade Distance -> 0.3。
+6. 复制 SMOKE，名为 FIRE。
+7. Set Size Random -> (0.33, 0.66)，Set Color -> 橙色。Set Velocity Random -> (0, 0.01, 0) - (0, 0.1, 0)。Set Lifetime Random -> (0.4, 1)。Multiply Size over Life -> Size -> 从小到大。Rate -> 32。
 
 # 26. 武器表面流光
 
@@ -1105,4 +1125,10 @@ Unity 2022.3.16f1
 19. 删除 Set Lifetime，创建 Inherit Source Size 和 Inherit Source Lifetime。创建 Multiply Lifetime -> 0.2。
 20. 删除 Turbulence，MainTexture -> None，Size over Life -> Composition -> Multiply。
 21. 创建 Set Color over Life，创建 Gradient 属性 TrailGradient，连接 Set Color over Life -> Color。颜色橙到蓝。
+
+# 27. 风墙（未完成）
+
+## 27.1 需要材质
+
+# 28. 龙卷风
 
