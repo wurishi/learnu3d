@@ -1130,5 +1130,37 @@ Unity 2022.3.16f1
 
 ## 27.1 需要材质
 
-# 28. 龙卷风
+# 28. 龙卷风（未完成）
 
+## 28.1 需要材质
+
+# 29. 山石升起
+
+## 29.1 开始
+
+1. 创建 Visual Effect Graph，vfxgraph_Earthbander，并拖入场景。
+2. 编辑 vfxgraph_Earthbander，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+3. 删除 Set Velocity Random。Set Lifetime -> Random -> Off，Lifetime -> 3。
+4. 删除 Output Particle Quad，Update Particle 连接新模块 Output Particle Mesh，创建 Set Size，Size -> 1。创建 Set Scale。
+5. 创建 Set Pivot，Y -> 1，让胶囊体在地面下方。
+6. 创建 Set Velocity，创建 Sample Curve，Time 连接 Age Over Lifetime，Curve -> (0, 1)(0.2, 0)(0.8, 0)(1, -1)。并连接新节点 Multiply，Multiply -> B -> 11，Multiply 连接 Set Velocity -> Y。
+7. Mesh -> Cube，Blend Mode -> Opaque。Set Scale -> Y -> 2。
+8. Sample Curve -> Curve -> 添加 (0.45, 0) (0.6, 0) 关键帧，都为 Flat。
+
+## 29.2 小石头
+
+1. 将所有节点组为 CENTER_ROCK，复制为 SMALL_ROCKS_BASE。Output Particle Quad 也命名为 SMALL_ROCKS_BASE。
+2. Count -> 15，Spawn system -> Delay Mode -> Before Loop。
+3. Set Lifetime -> Random -> Uniform，AB -> (3.2, 3.6)。
+4. 创建 Set Position Arc Circle，Arc Circle -> Circle -> Radius -> 0.8。Arc Circle -> Circle -> Transform -> Angles -> X -> -90。
+5. 删除 Set Pivot，删除 Set Velocity，Mesh -> 换个石头，调整尺寸形成周围环绕的小石头群。
+6. 创建 Set Angle，Random -> Uniform，AB -> (360, 360, 0)-(-360, -360, 0)。
+7. 创建 Set Size over Life，Composition -> Multiply，Size -> (0, 0)(0.05, 1)(0.8, 1)(1, 0)。
+
+## 29.3 飞溅
+
+1. 复制 SMALL_ROCKS_BASE，命名为 FLYING_ROCKS，Output Particle Quad 也要改名。
+2. Set Lifetime Random -> (0.4, 1.8)，删除 Set Position Circle，创建 Set Position Sphere，Radius -> 0.5，Position -> Y -> 0.4。
+3. 创建 Set Velocity from Direction & Speed (Spherical)，创建 Random Number 节点，Min/Max -> (2, 14)，连接 Set Velocity from -> Speed。Set Size -> Random -> Uniform，AB -> (0.2, 0.8)。Set Scale -> Random -> Uniform。Multiply Size over Life -> Size -> 从大到小抛物线。
+4. 创建 Gravity，创建 Random Number 节点，Min/Max -> (-7, -15)，连接 Gravity -> Force -> Y。
+5. 创建 Collide with Plane，Bounce -> 0.5，Friction -> 0.5。
