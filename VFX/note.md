@@ -1164,3 +1164,66 @@ Unity 2022.3.16f1
 3. 创建 Set Velocity from Direction & Speed (Spherical)，创建 Random Number 节点，Min/Max -> (2, 14)，连接 Set Velocity from -> Speed。Set Size -> Random -> Uniform，AB -> (0.2, 0.8)。Set Scale -> Random -> Uniform。Multiply Size over Life -> Size -> 从大到小抛物线。
 4. 创建 Gravity，创建 Random Number 节点，Min/Max -> (-7, -15)，连接 Gravity -> Force -> Y。
 5. 创建 Collide with Plane，Bounce -> 0.5，Friction -> 0.5。
+
+# 30. 毒液瀑布（未完成）
+
+## 30.1 需要材质
+
+# 31. 地面冲击崩裂（未完成）
+
+## 31.1 需要材质
+
+# 32. 拖尾原理
+
+1. 在 VFX 中有一种 Particle Strip，它表示粒子的轨迹。粒子带意为粒子连接形成带。
+2. 常见的模板会由二部分组成，左侧为标准化的粒子系统配置，然后在 Update Particle 中的 Trigger Event Rate 模块连接 GPU Event。再由 GPU Event 触发右侧的粒子带系统。通过这样一个配置可以实现由右侧的粒子带系统追踪左侧粒子系统的运动，来形成一个轨迹。
+3. 可以通过在粒子带系统中使用 Set Color over Life 来改变粒子带的颜色，或者使用 Turbulence 增强轨迹的扭曲。
+4. Trigger Event Rate 会生成每秒 60 次的事件，意味着每一帧都会发生一次事件，然后该事件由 GPU Event 接收，并为粒子带系统生成一个新的粒子。然后一般是通过 Inherit Source Position，继承当前父粒子的当前位置。
+5. 可以通过创建 Simple Heads And Trails 快速创建。
+
+# 33. 风格化的光柱特效
+
+## 33.1 开始
+
+1. 创建 Visual Effect Graph，名为 vfxgraph_VerticalBeam，并拖入场景。
+2. 编辑 vfxgraph_VerticalBeam，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+3. 删除 Set Velocity，Set Lifetime Random -> Random -> Off，Lifetime -> 3。
+4. 删除 Output Particle Quad，Update Particle 连接新模块 Output Particle Mesh，Mesh -> 圆柱体。创建 Set Size，Size -> 1。创建 Set Scale -> (1, 1, 15)。
+5. 创建 Set Angle，Angle -> X -> -90。
+6. Output Particle Mesh 命名为 CYLINDER_CORE。Main Texture -> None。创建 Set Color -> (50, 17, 9)。
+7. 创建 Multiply Scale over Life，XY 都是平线。Z -> (0, 0) - (0.15, 1) 直线。
+8. 所有节点组为 CYLINDER_CORE，复制一个名为 CYLINDER_BACK，Output Particle Mesh 名称也要相应的修改。
+9. Set Scale -> (4.9, 4.9, 15)，Set Color -> (0.075, 0, 0.22)。
+10. 创建 Set Alpha，Alpha -> 2。
+11. 调整 vfxgraph_VerticalBeam -> Inspector -> Output Render Order -> CYLINDER_BACK 先渲染。
+
+## 33.2 溶解
+
+1. 复制 CYLINDER_BACK，命名为 CYLINDER_FRESNEL。
+2. Set Scale -> (5, 5, 15)，删除 Set Color。
+3. 创建 Unlit Shader Graph，名为 FresnelShader。
+4. 修改 FresnelShader，Allow Material Override -> On，Surface Type -> Transparent，Support VFX Graph -> On。
+5. 创建 Fresnel Effect 节点，创建 Color 属性 FresnelColor，Mode -> HDR，白色，Alpha -> 100。创建 Float 属性 FresnelPower，X -> 1。FresnelPower 连接 Fresnel Effect -> Power。
+6. FresnelColor 连接新节点 Multiply: A，Fresnel Effect 连接 Multiply -> B。Multiply 连接 Fragment -> BaseColor。
+7. Multiply 连接新节点 Split，Split -> A 连接 Fragment -> Alpha。
+8. 回到 vfxgraph_VerticalBeam，CYLINDER_FRESNEL -> Shader Graph -> FresnelShader。
+9. 调整 vfxgraph_VerticalBeam -> Inspector -> Output Render Order -> CYLINDER_FRESNEL 到最后渲染。
+10. FresnelColor -> (68, 7, 3)，FresnelPower -> 5.5。
+11. 复制 CYLINDER_FRESNEL，名为 CYLINDER_VORONOI。
+12. Set Scale -> (5.2, 5.2, 15)。
+13. 创建 Unlit Shader Graph，名为 VoronoiShader。
+14. 编辑 VoronoiShader，Allow Material Override -> On，Surface Type -> Transparent，Alpha Clipping -> On，Support VFX Graph -> On。
+15. 创建 Color 属性 Color，Mode -> HDR，Color -> 白色，Alpha -> 100。
+16. 创建 Voronoi 节点，Color 连接新节点 Multiply: A，Voronoi -> Out 连接 Multiply -> B。Multiply 连接 Fragment -> BaseColor。
+17. Multiply 连接新节点 Split，Split -> A 连接 Fragment -> Alpha。
+18. 创建 Float 属性 Clip，Mode -> Slider。连接 Fragment -> Alpha Clip Threshold。
+19. 创建 Tiling And Offset 节点，连接 Voronoi -> UV。创建 Vector2 属性 VoronoiTiling，XY -> (1, 1)，连接 Tiling And Offset -> Tiling。
+20. 创建 Time 节点，连接新节点 Multiply: A，创建 Vector2 属性 VoronoiSpeed，XY -> (0, 0)，连接 Multiply -> B。这个 Multiply 连接 Tiling And Offset -> Offset。
+21. 回到 vfxgraph_VerticalBeam，CYLINDER_VORONOI -> Shader Graph -> VoronoiShader。Clip -> 0.5，VoronoiTiling -> (7.5, -0.52)，VoronoiSpeed -> (0, 1)。Color -> (11.3, 1.65, 0.77, 1.2)。
+
+## 33.3 电流
+
+1. 复制 CYLINDER_VORONOI，名为 CYLINDER_VORONOI_2。
+2. Set Scale -> (5.4, 5.4, 15)。VoronoiTiling -> (7.5, -0.3)，VoronoiSpeed -> (0, 1.2)，Color -> (0.77, 1.65, 11.3, 1.2)，Clip -> 0.8。
+3. 创建 AnimationCurve 属性 CylinderGrowXY，连接每个组的 Multiply Scale over Life -> X和Y。
+4. 调整 CylinderGrowXY 曲线。
