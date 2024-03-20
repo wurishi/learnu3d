@@ -1296,3 +1296,43 @@ Unity 2022.3.16f1
 10. 创建 Color 属性 IntersectionColor，Mode -> HDR，Color -> 白色，Alpha -> 100。它连接新节点 Multiply: A。Clamp 连接该 Multiply: B。
 11. 将 10.Multiply 连接 Fragment -> Color 覆盖原有。再连接新节点 Split，Split -> A 连接 Fragment -> Alpha 覆盖原有。
 12. Alow Material Override -> On，IntersectionMat -> Render Face -> Both。
+
+# 42. 水波纹及相交物体的边缘效果
+
+## 42.1 开始 
+
+1. 创建 Lit Shader Graph，名为 CartoonWaterShader。
+2. 编辑 CartoonWaterShader，Surface Type -> Transparent，Alpha Clipping -> On。
+3. 创建 Color 属性 BaseColor，Mode -> HDR，Color -> 蓝色。连接 Fragment -> BaseColor。
+4. 创建 Voronoi 节点，Voronoi -> Out 连接 Fragment -> Emission。
+5. 创建 Time 节点，连接新节点 Multiply: A。
+6. 创建 Vector2 属性 RipplesSpeed，XY -> (0.75, 0.75)，连接 Multiply -> B。Multiply 连接 Voronoi -> AngleOffset。
+7. Voronoi -> Out 连接新节点 Multiply: A，创建 Color 属性 RipplesColor，Mode -> HDR，Color -> 淡蓝色。连接 Multiply -> B。该 Multiply 连接 Fragment -> Emission 覆盖原有。
+8. 创建 Float 属性 RipplesScale，X -> 3，连接 Voronoi -> CellDensity。
+
+## 42.2 细节
+
+1. 创建 Radial Shear 节点，Strength -> (1, 1)，连接 Voronoi -> UV。
+2. Voronoi -> Out 连接新节点 Power: A，Power 连接 42.1.7Multiply -> A，覆盖原有。
+3. 创建 Float 属性 RipplesDissolve，X -> 5，连接 Power -> B。
+4. 创建 Float 属性 Metallic 和 Gloss 连接 Fragment -> Metallic 和 Smoothness。
+5. 将 42.1.7Multiply -> A 连接新节点 Normal From Height: In，创建 Float 属性 NormalStength，连接 Normal From Height -> Stength。Normal From Height 连接 Fragment -> Normal。
+6. 创建 Simple Noise 节点，Scale -> 20，连接新节点 Normal From Height: In，NormalStength 连接 Normal From Height -> Stength，连接新节点 Normal Blend: A，42.2.5Normal From Height 连接 Normal Blend -> B。Normal Blend 连接 Fragment -> Normal 覆盖原有。
+7. Time 连接新节点 Multiply: A，创建 Vector2 属性 NormalSpeed，X Y-> (0.1, -0.1)，连接 Multiply -> B。该 Multiply 连接新节点 Tiling And Offset: Offset。Tiling And Offset 连接 Simple Noise -> UV。
+8. 使用 Gradient Noise 代替 Simple Noise。
+
+## 42.3 远近
+
+1. 创建 Position 节点，Space -> World。
+2. 创建 Camera 节点，创建 Subtract 节点，Position 连接 A，Camera -> Position 连接 B。（表示离相机的距离）
+3. Camera -> Direction 连接新节点 Dot Product: A，Subtract 连接 Dot Product -> B。Dot Product 连接 Fragment -> Alpha。
+4. Dot Product 连接新节点 Remap: In，创建 Vector2 节点连接 Remap -> InMinMax，Camera -> FarPlane 连接 Vector2 -> Y。
+5. 创建 Remap 节点，创建 Float 属性 FoamOffset，X -> 0.5。
+6. Dot Product 连接新节点 Add: A，FoamOffset 连接 Add -> B。Add 连接 5.Remap -> In，Vector2 连接 5.Remap -> InMinMax。
+7. 创建 Smoothstep 节点，两个 Remap 分别连接它的 Edge1 和 Edge2。创建 Scene Depth 节点连接 Smoothstep -> In。
+8. Smoothstep 连接新节点 One Minus，One Minus 连接 Fragment -> Alpha 覆盖原有。
+9. 将 42.1.7Multiply 连接新节点 Split，Split -> R 连接新节点 Remap: In，InMinMax -> (0, 1)，OutMinMax -> (0.2, 5)。
+10. Remap 连接新节点 Multiply: A，创建 Float 属性 Transparency，连接 Multiply -> B。该 Multiply 连接 Add: A，OneMinus 连接 Add -> B。该 Add 连接 Fragment -> Alpha。
+
+# 43. 水波纹与物体交互
+
