@@ -1282,3 +1282,17 @@ Unity 2022.3.16f1
 
 # 41. 物体相交效果
 
+## 41.1 开始
+
+1. Edit -> Project Settings -> Graphics -> Scriptable Render Pipeline Settings 找到指定的 Setting，选中该文件，Inspector -> Depth Texture -> On，Opaque Texture -> On。
+2. 创建 Lit Shader Graph，命名为 Intersection_Lit。
+3. 编辑 Intersection_Lit，Surface Type -> Transparent。
+4. 创建 Screen Position，Mode -> Raw，连接新节点 Split，Split -> A 连接新节点 Subtract: A。
+5. 创建 Float 属性 IntersectionDepth，X -> 0.5，连接 Subtract -> B。
+6. 创建 Scene Depth 节点，Sampling -> Eye。连接新节点 Subtract: A，将 4.Subtract 连接到该 Subtract -> B。该 Subtract 连接到 Fragment -> Alpha。
+7. 创建该 Shader 对应的材质，获得一个顶点相交部位会透明的效果。
+8. 此时调节 IntersectionDepth，会发现值越大，效果越小。所以需要反转一下。将 IntersectionDepth 连接新节点 Remap: In，In Min Max -> (0, 1)，Out Min Max -> (1, 0)，Remap 连接 4.Subtract -> B 覆盖原有。
+9. 将 6.Subtract 连接新节点 One Minus，OneMinus 连接新节点 Clamp: In，Clamp 连接 Fragment -> BaseColor 和 Alpha 覆盖原有。
+10. 创建 Color 属性 IntersectionColor，Mode -> HDR，Color -> 白色，Alpha -> 100。它连接新节点 Multiply: A。Clamp 连接该 Multiply: B。
+11. 将 10.Multiply 连接 Fragment -> Color 覆盖原有。再连接新节点 Split，Split -> A 连接 Fragment -> Alpha 覆盖原有。
+12. Alow Material Override -> On，IntersectionMat -> Render Face -> Both。
