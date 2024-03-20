@@ -1336,3 +1336,42 @@ Unity 2022.3.16f1
 
 # 43. 水波纹与物体交互
 
+## 43.1 开始
+
+1. 创建 Lit Shader Graph，命名为 WaterShader，Alpha Clipping -> On，Surface Type -> Transparent。
+2. 创建 Float 属性 WaterNoiseScale，WaterHeight，WaterSpeed，FoamDepth，X 都为 2。
+3. 创建 Color 属性 FoamDepth，白色，Alpha -> 100。创建 Float 属性 FoamRippleSpeed，X -> 0.3。创建 Float 属性 FoamNoiseScale，X -> 10。创建 Float 属性 DepthFade，X -> 0.7。创建 Color 属性 ShallowColor，淡蓝色，Alpha -> 100。DeepColor，深蓝色，Alpha -> 100。
+4. 创建 Position 节点，连接新节点 Split，Split -> R 连接 Vector2: A，Split -> B 连接 Vector2 -> Y。
+5. Vector2 连接 Tiling And Offset: UV。创建 Time 节点，连接新节点 Multiply: A，Multiply 连接 Tiling And Offset -> Offset。WaterSpeed 连接 Multiply -> B。
+6. Tiling And Offset 连接新节点 Gradient Noise: UV，WaterNoiseScale 连接 Gradient Noise -> Scale。GradientNoise 连接新节点 Multiply: A，WaterHeight 连接 Multiply -> B。
+7. 将 6.Multiply 连接新节点 Vector3: Y，创建 Position 节点，Space -> Object，连接新节点 Split，Split -> R 连接 Vector3 -> X，Split -> B 连接 Vector3 -> Z。
+8. 将 7.Position 连接新节点 DDY 和新节点 DDX。DDY 连接新节点 Cross Product: A，DDX 连接 Cross Product -> B。
+9. Cross Product 连接新节点 Normailze，Normalize 连接新节点 Transform，Object 到 Tangent，Type -> Direction。
+10. 将所有节点组为 Vert Displacement and Normals。
+11. 将 Vector3 连接 Verte -> Position，Transform 连接 Fragment -> Normal。
+
+## 43.2 颜色
+
+1. 创建 Position 节点，连接新节点 Split，Split -> R 连接新节点 Vector2: X。
+2. 创建 Time 节点，连接新节点 Multiply: A，FoamRippleSpeed 连接 Multiply -> B。
+3. Vector2 连接新节点 Tiling And Offset: UV，2.Multiply 连接 Tiling And Offset -> Offset。
+4. Tiling And Offset 连接新节点 Gradient Noise: UV，FoamNoiseScale 连接 Gradient Noise -> Scale。
+5. 创建 Scene Depth 节点，Sampling -> Eye，连接新节点 Subtract: A。
+6. 创建 Screen Position，Mode -> Raw，连接新节点 Split，Split -> A 连接 Subtract -> B。
+7. Subtract 连接新节点 Add: A，Gradient Noise 连接 Add -> B。
+8. Subtract 连接新节点 Divide: A，DepthFade 连接 Divide -> B。
+9. Divide 连接新节点 Saturate，Saturate 连接新节点 Lerp: T，DeepColor 连接 Lerp -> A，ShallowColor 连接 Lerp -> B。
+10. 将 7.Add 连接新节点 Divide: A，FoamDepth 连接 Divide -> B，Divide 连接新节点 Step: Edge，FoamColor 连接 Step -> In。
+11. Step 连接新节点 Add: A，Lerp 连接 Add -> B。该 Add 连接 Fragment -> BaseColor。
+12. 将以上这些节点组为 Color。
+13. WaterMat:
+    - WaterNoiseScale -> 0.16
+    - WaterHeight -> 0.8
+    - WaterSpeed -> 1.1
+    - FoamDepth -> 1.2
+    - FoamRippleSpeed -> 0.4
+    - FoamNoiseScale -> 4.35
+    - DepthFade -> 2.75
+    - Enable GPU Instancing -> On
+
+# 44.
