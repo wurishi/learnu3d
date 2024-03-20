@@ -887,7 +887,7 @@ Unity 2022.3.16f1
 
 # 17. 风格化光束 (未完成)
 
-## 17.1 开始（需要材质）
+## 17.1 开始（需要 mesh）
 
 1. 创建空对象，vfx_StylizedBeam，Reset Transform，Y -> 2。
 2. 创建 Visual Effect Graph，vfxgraph_StylizedBeam，并作为 vfx_StylizedBeam 的子物体拖到场景中。
@@ -1128,11 +1128,11 @@ Unity 2022.3.16f1
 
 # 27. 风墙（未完成）
 
-## 27.1 需要材质
+## 27.1 需要 mesh
 
 # 28. 龙卷风（未完成）
 
-## 28.1 需要材质
+## 28.1 需要 mesh
 
 # 29. 山石升起
 
@@ -1167,11 +1167,11 @@ Unity 2022.3.16f1
 
 # 30. 毒液瀑布（未完成）
 
-## 30.1 需要材质
+## 30.1 需要 mesh
 
 # 31. 地面冲击崩裂（未完成）
 
-## 31.1 需要材质
+## 31.1 需要 mesh
 
 # 32. 拖尾原理
 
@@ -1227,3 +1227,58 @@ Unity 2022.3.16f1
 2. Set Scale -> (5.4, 5.4, 15)。VoronoiTiling -> (7.5, -0.3)，VoronoiSpeed -> (0, 1.2)，Color -> (0.77, 1.65, 11.3, 1.2)，Clip -> 0.8。
 3. 创建 AnimationCurve 属性 CylinderGrowXY，连接每个组的 Multiply Scale over Life -> X和Y。
 4. 调整 CylinderGrowXY 曲线。
+
+# 35. 视差地裂（未完成）
+
+## 35.1 需要 mesh
+
+# 36. 护盾屏障（未完成）
+
+## 36.1 需要 mesh
+
+# 37. Shader Graph 和 VFX Graph
+
+1. Shader Graph 可以作为自定义 Shader 在 VFX 中使用，让 VFX 可以更精准的控制粒子的材质样式和外观。可以通过 Shader Graph / VFX Shader Graph 创建，也可以创建其他的 Shader Graph 并启用 Support VFX Graph。
+2. Lit 类型的材质会接受光照和阴影的计算和影响，Unlit 类型则不参与光照和阴影计算。
+
+# 38. SubGraph
+
+1. SubGraph 可以认为是一种自定义的节点或模块。可以将多个节点组成一个 SubGraph，或多个模块组成一个 SubGraph Block。
+2. 在 SubGraph 中也可以创建属性用来接收外部的参数，或者创建 Output 属性提供给外部使用。
+3. SubGraph 创建完成后，在 Graph 中可以查找名字的方式和其他节点或模块一样使用。 
+
+# 39. VFX Attribute Inspector
+
+## 39.1 Set Attribute
+
+1. Attribute: 要设置的属性。
+2. Composition: 组合选项用来设置如何写入值。
+   - Overwrite: 覆盖当前值。
+   - Add: 加法，在当前值基础上做加法。
+   - Multiply: 乘法，在当前值基础上做乘法。
+   - Blend: 混合，通过 Blend (0 - 1)，控制将值的多少百分比混入当前值。
+3. Source: 值从哪里获取。
+   - Slot: 设置值。
+   - Source: 通过继承（即切换为 Inherit Source Attribute）。
+4. Random: 随机选项。
+   - Off: 不随机。
+   - PerComponent: XYZ 三个元素独立随机。
+   - Uniform: 从值A和值B的线上随机选择一个值。
+
+## 39.2 Attribute From Curve
+
+1. Attribute: 要设置的属性。
+2. Composition: 组合选项用来设置如何写入值。
+3. Sample Mode: 对曲线的采样方式，即如果从曲线中获取值。
+   - OverLife: 根据粒子的时间轴采样。
+   - BySpeed: 基于粒子的速度采样。
+   - Random: 每次采样随机位置。
+   - RandomConstantPerParticle: 每个粒子会随机到一个固定位置，每次都返回相同的值。
+   - Custom: 提供 Sample Time 可以自己控制采样的横坐标。
+
+# 40. 电流贴图
+
+## 40.1 需要 SubstanceDesigner
+
+# 41. 物体相交效果
+
