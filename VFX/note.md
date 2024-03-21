@@ -1374,4 +1374,29 @@ Unity 2022.3.16f1
     - DepthFade -> 2.75
     - Enable GPU Instancing -> On
 
-# 44.
+# 46. 能量护盾与物体相交
+
+## 46.1 开始
+
+1. 确认渲染管理设置中 Depth Texture -> On。
+2. 创建 Lit Shader Graph，名为 ForceField。创建对应的材质 ForceFieldMat。
+3. 编辑 ForceField，Alpha Clipping -> On，Surface Type -> Transparent。
+
+## 46.2 Intersection 相交
+
+1. 创建 Scene Depth 节点，Sampling -> Eye。创建 Screen Position 节点，Mode -> Raw。
+2. Screen Position 连接新节点 Split。Scene Depth 连接新节点 Subtract: A。Split -> A 连接 Subtract -> B。Subtract 连接 Fragment -> Emission。
+3. 选择使用 ForceFieldMat 的物体，Inspector -> Mesh Renderer -> Lighting -> Case Shadows -> Off。
+4. 创建 Float 属性 Offset，X -> 0.6。Split -> A 连接新节点 Subtract: A，Offset 连接 Subtract -> B。该 Subtract 连接 2.Subtract -> B 覆盖原有。删除 2.Subtract 连接 Fragment -> Emission 的连线。
+5. 将 2.Subtract 连接新节点 One Minus，One Minus 连接新节点 Smoothstep: In。Smoothstep 连接 Fragment -> Alpha。
+6. 创建 Color 属性 Emission，Mode -> HDR，淡蓝色，2.5增强。连接 Fragment -> Emission。
+7. Alpha Clip Threshold -> 0.2 左右才有效果。
+
+## 46.3 护盾
+
+1. 创建 Fresnel Effect 节点，创建 Float 属性 FresnelPower，X -> 5，连接 Fresnel Effect -> Power。
+2. Fresnel Effect 连接新节点 Add: A，Smoothstep 连接 Add -> B，Add 连接 Fragment -> Alpha 覆盖原有。
+3. 创建 Texture2D 属性 Pattern，连接新节点 Sample Texture 2D，它的 RGBA 连接新节点 Multiply: A，2.Add 连接 Multiply -> B。该 Multiply 连接 Fragment -> Alpha 覆盖原有。
+4. Sample Texture2D -> UV 连接新节点 Tiling And Offset。
+5. 创建 Time 节点，连接新节点 Multiply: A。创建 Float 属性 ScrollSpeed，X -> 0.05，连接 Multiply -> B。该 Multiply 连接 4.Tiling And Offset -> Offset。
+6. 将 3.Multiply 连接新节点 Add: A，创建 Float 属性 Fill，X -> 0.01，连接 Add -> B。Add 连接 Fragment -> Alpha 覆盖原有。
