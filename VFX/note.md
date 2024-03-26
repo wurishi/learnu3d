@@ -1400,3 +1400,41 @@ Unity 2022.3.16f1
 4. Sample Texture2D -> UV 连接新节点 Tiling And Offset。
 5. 创建 Time 节点，连接新节点 Multiply: A。创建 Float 属性 ScrollSpeed，X -> 0.05，连接 Multiply -> B。该 Multiply 连接 4.Tiling And Offset -> Offset。
 6. 将 3.Multiply 连接新节点 Add: A，创建 Float 属性 Fill，X -> 0.01，连接 Add -> B。Add 连接 Fragment -> Alpha 覆盖原有。
+
+# 47. 护盾交互（未完成）
+
+## 47.1 不够详尽
+
+# 48. 护盾（未完成）
+
+## 48.1 需要 mesh
+
+# 49. 风格化闪电（未完成）
+
+## 49.1 需要 mesh
+
+# 50. 冰晶材质
+
+## 50.1 开始
+
+1. 创建 Lit Shader Graph，命名为 IceShader。
+2. 编辑 IceShader，创建 Float 属性 Metallic，创建 Float 属性 Smoothness，X -> 0.5，创建 Float 属性 Normals，Min -> -3，Max -> 3。Metallic 连接 Fragment -> Metallic，Smoothness 连接 Fragment -> Smoothness。
+3. 创建 Color 属性 Color，Mode -> HDR。创建 Texture2D 属性 IceTexture。
+4. 创建 Scene Color 节点，连接 Fragment -> BaseColor。
+5. 确保 Pipeline 配置中打开了 Depth Texture 和 Opaque Texture。
+6. 创建 Screen Position 节点，连接 Scene Color。
+7. Graph Settrings -> Surface Type -> Transparent。
+8. IceTexture 连接新节点 Sample Texture 2D，Sample Texture 2D -> R 连接新节点 Multiply: B，Screen Position 连接 Multiply -> A。将 Multiply 连接 Scene Color 覆盖原有。
+9. IceMat 中也要设置一次 IceTexture。
+10. Scene Position 连接新节点 Lerp: A，Multiply 连接 Lerp -> B，Lerp 连接 Scene Color 覆盖原有。
+11. 创建 Float 属性 ReflectionAmount，Min -> -1，Max -> 1。ReflectionAmount 连接 Lerp -> T。
+12. Multiply 连接新节点 Add: B，Scene Position 连接 Add -> A。Add 连接 Lerp -> B 覆盖原有。
+13. 创建 Normal From Texture 节点，IceTexture 连接 Normal From Texture -> Texture，Normals 连接 Normal From Texture -> Strength。Normal From Texture 连接 Fragment -> Normal。
+14. Scene Color 连接新节点 Add: A，Sample Texture 2D -> R 连接 Add -> B，Add 连接 Fragment -> BaseColor 覆盖原有。
+15. Color 连接新节点 Multiply: A，14.Add 连接 Multiply -> B。Multiply 连接 Fragment -> BaseColor 覆盖原有。
+16. 创建 Fresnel Effect 节点，创建 Float 属性 FresnelPower，X -> 1。连接 Fresnel Effect -> Power。
+17. 创建 Color 属性 FresnelColor，Mode -> HDR，连接新节点 Multiply: A，Fresnel Effect 连接 Multiply -> B。该 Multiply 连接新节点 Add: A，15.Multiply 连接 Add -> B。该 Add 连接 Fragment -> BaseColor。
+18. 创建 Tiling And Offset 节点，连接 Sample Texture 2D -> UV。
+19. 创建 Vector2 属性 IceTiling，XY -> (1, 1)，连接 Tiling And Offset -> Tiling。
+20. 如果阴影效果有问题，可以创建一个使用 Unlit 的 Mat，然后设置 Mesh Renderer -> Materials -> 2，并将 UnlitMat 设置给 Materials 第二项。
+
