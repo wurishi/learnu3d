@@ -1438,3 +1438,37 @@ Unity 2022.3.16f1
 19. 创建 Vector2 属性 IceTiling，XY -> (1, 1)，连接 Tiling And Offset -> Tiling。
 20. 如果阴影效果有问题，可以创建一个使用 Unlit 的 Mat，然后设置 Mesh Renderer -> Materials -> 2，并将 UnlitMat 设置给 Materials 第二项。
 
+# 51(上). 枪口冒火（未完成）
+
+## 51.1 需要 mesh
+
+# 51(下). 枪口冒火
+
+## 51.1 Hit
+
+1. 创建 Visual Effect Graph，命名为 vfxgraph_hit，并拖入场景。
+2. 编辑 vfxgraph_hit，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
+3. 删除 Set Velocity Random，Set Lifetime Random -> (0.1, 0.2)。
+4. Main Texture -> Default-Particle，Blend Mode -> Additive，创建 Set Size，Size -> 4。Set Size over Life -> Composition -> Multiply，Size -> 从大到小直线。
+5. 创建 Set Color，创建 Color 属性 Color01，连接 Set Color -> Color。Set Color over Life -> Composition -> Multiply，Color -> 删除第1和3关键帧，只需要从有到无的渐变。
+6. 所有节点组为 FLASH，复制它并命名为 CROSS。Count -> 2。
+7. 创建 Set Scale，X -> 0.1。Multiply Size over Life -> Size -> 从大到小抛物线。
+8. 创建 Set Angle，Z -> 45。创建 Get Attribute: spawnIndex 节点，连接新节点 Compare，Condition -> Greater，Right -> 0。Compare 连接新节点 Branch，True -> 45，False -> 135。Branch 连接 Set Angle -> Angle -> Z。
+9. Set Lifetime -> Random -> Off，Lifetime -> 0.2。
+
+## 51.2 火花
+
+1. 复制 FLASH，命名为 PARTICLES。Count -> 20。
+2. 创建 Set Position Sphere，Arc Sphere ->Sphere -> Radius -> 0.1，Set Lifetime Random -> B -> 0.4。
+3. 在 Update Particle 中创建 Conform to Sphere，Set Size -> Random -> Uniform，AB -> (0.1, 1)。
+4. Orient -> Along Velocity，创建 Set Scale，X -> 0.2。
+5. 创建 Color 属性 Color02 代替 Color01。
+
+## 51.3 Decal 贴花
+
+1. FLASH，CROSS，PARTICLES 全部 Use Soft Particle -> On，Soft Particle Fade Distance -> 0.5。
+2. 复制 FLASH，命名为 DECAL，Update Particle 连接新模块 Output Particle Forward Decal，复制 Set Size，Set Color，Multiply Color over Life 到 Output Particle Forward Decal，Set Color -> 黑色，Set Size -> 1。
+3. 删除 Output Particle Quad，Set Lifetime -> Random -> Off，Lifetime -> 3。
+4. 创建 Set Angle，X -> -90。Main Texture -> Default-Particle。
+5. 在 vfxgraph_hit -> Inspector -> Output Render Order -> 将 Decal 拖到最顶部最早渲染。
+6. Color01 连接新节点 Multiply，Multiply -> B -> 0.1，Multiply 连接 Set Color -> Color。
