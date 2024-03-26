@@ -1472,3 +1472,28 @@ Unity 2022.3.16f1
 4. 创建 Set Angle，X -> -90。Main Texture -> Default-Particle。
 5. 在 vfxgraph_hit -> Inspector -> Output Render Order -> 将 Decal 拖到最顶部最早渲染。
 6. Color01 连接新节点 Multiply，Multiply -> B -> 0.1，Multiply 连接 Set Color -> Color。
+
+# 54. 裂地斩（未完成）
+
+## 54.1 开始（需要 Mesh)
+
+1. 创建空对象 vfx_SlashAttack，Reset Transform。
+2. 在 vfx_SlashAttack 上添加 Particle System。
+   - Looping -> Off
+   - Start Lifetime -> 0.45
+   - Start Speed -> 0
+   - Emission -> Rate over Time -> 0
+   - Emission -> Bursts -> Count -> 1
+   - Shape -> Off
+   - Renderer -> Render Mode -> Mesh
+   - Renderer -> Material -> Default-Particle
+   - Renderer -> Render Alignment -> Local
+3. Velocity over Lifetime -> On
+   - Linear -> Curve
+   - 禁用 Linear -> Y 和 Z
+   - X -> 第一帧 Value -> 50
+4. 使用 Slash Mesh
+
+# 55. 路径丝带（未完成）
+
+## 55.1 需要 Mesh
