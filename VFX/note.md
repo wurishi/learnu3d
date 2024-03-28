@@ -663,9 +663,9 @@ Unity 2022.3.16f1
 7. 将 1.Smoothstep 连接新节点 Multiply: A，12.2.6 Multiply 连接这个 Multiply -> B。
 8. 将 12.2.5 Multiply 连接新节点 Add: A，12.2.7 Multiply 连接这个 Add -> B。再将这个 Add 连接 Fragment -> Emission 覆盖原有。
 
-# 13. 卡萨丁技能特效 （未完成）
+# 13. 卡萨丁技能特效 
 
-## 13.1 开始（需要特制材质）
+## 13.1 开始
 
 1. 创建 Visual Effect Graph 命名为 vfxgraph_KassadinSlash，并拖入场景。
 2. 编辑 vfxgraph，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
@@ -673,6 +673,33 @@ Unity 2022.3.16f1
 4. 创建 Set Size，Size -> 1。
 5. 删除 Set Velocity Random。修改 Set Lifetime， Random -> Off，Lifetime -> 1。
 6. 添加 Set Angle，设置角度让 Mesh 平铺。
+7. 创建 Set Scale，创建 Set Scale over Life，Z 直线无变化，X 和 Y (0, 0) (0.2, 0.95) (1, 1)，后二点 Clamped Auto。
+8. 在 Update Particle 中创建 Set Velocity over Life，X 和 Y 只有一个点(0, 0)，Z -> (0, -20) (0.2, 0)
+9. 设置 MainTexture，Texture -> Alpha Is Transparenct，Wrap Mode -> Clamp。
+
+## 13.2 Shader
+
+1. 创建 Unlit Shader Graph，名为 KassadinSlash_Shader。
+2. 编辑 KassadinSlash_Shader，Surface Type -> Transparent，Support VFX Graph -> On。
+3. 创建 Color 属性 Color，白色，Alpha -> 100%，Mode -> HDR。
+4. 创建 Texture2D 属性 MainTex，连接新节点 Sample Texture2D，并设置 Texture。
+5. 创建 Tiling And Offset 节点，连接 Sample Texture2D -> UV。
+6. 创建 Vector2 属性 MainTexOffset 连接 Tiling And Offset -> Offset。
+7. Sample Texture 2D -> RGBA 连接新节点 Multiply: B，Color 连接 Multiply -> A。
+8. Multiply 连接 Fragment -> BaseColor。
+9. Multiply 连接新节点 Split，Split -> A 连接 Fragment -> Alpha。
+10. 回到 vfxgraph，Shader Graph -> KassadinSlash_Shader。
+11. 创建 Sample Curve 节点，曲线 (0, 0.65) (1, -0.75) ，并连接 Shader Graph -> MainTexOffset -> Y。
+12. 创建 Age Over Lifetime 连接 Sample Curve -> Time。
+13. 创建 Sample Gradient ，连接 Shader Graph -> Color。Age Over Lifetime 连接 Sample Gradient -> Time。
+
+## 13.3 噪音
+
+1. 编辑 KassadinSlash_Shader，创建 Simple Noise 节点，Scale -> 30。连接到新节点 Add: A。
+2. 创建 UV 节点，连接新节点 Split，Split -> G 连接 Add -> B。Add 连接新节点 Multiply: A，Sample Texture2D -> RGBA 连接 Multiply -> B。用该 Multiply 连接 13.2.7 Multiply -> A 覆盖原有。
+3. Simple Noise 连接新节点 Power，Power -> B -> 3。Power 连接 Add -> A 覆盖原有。
+4. 回到 vfxgraph，Output Particle Mesh 命名为 BRIGHT_SLASH。所有节点组为 BRIGHT_SLASH。
+5. 复制 BRIGHT_SLASH，命名为 DARK_SLASH。
 
 # 14. 小型爆炸
 
