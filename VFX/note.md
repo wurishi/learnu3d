@@ -912,17 +912,66 @@ Unity 2022.3.16f1
    - Arc Shpere -> Sphere -> Radius -> 0.1
 2. Speed -> 3
 
-# 17. 风格化光束 (未完成)
+# 17. 风格化光束
 
-## 17.1 开始（需要 mesh）
+## 17.1 开始
 
 1. 创建空对象，vfx_StylizedBeam，Reset Transform，Y -> 2。
 2. 创建 Visual Effect Graph，vfxgraph_StylizedBeam，并作为 vfx_StylizedBeam 的子物体拖到场景中。
 3. 编辑 vfxgraph_StylizedBeam，删除 Constant Spawn Rate，创建 Single Burst，Count -> 1。
-4. 删除 Output Particle Quad，Update Particle 连接新 block，Output Particle Mesh。
+4. 删除 Output Particle Quad，Update Particle 连接新 block，Output Particle Mesh。Mesh -> 指定 Mesh，Inspector -> Cull Mode -> Off。
 5. 创建 Set Size，Size -> 3。
 6. 删除 Set Velocity，创建 Set Angle，Set Lifetime -> Random -> Off，Lifetime -> 3。
 7. 创建 float 属性 Duration，Value -> 3，连接 Set Lifetime -> Lifetime。
+8. 创建 Set Scale，Scale -> (0.4, 2, 1)。
+9. 创建 Set Scale over Life，Z -> 直线，Y -> (0, 0)(0.1, 1)(1, 1)，X -> (0, 0)(0.1, 1)(0.9, 1)(1, 0)，Composition -> Multiply。
+10. Main Texture -> 设置贴图
+
+## 17.2 Shader
+
+1. 创建 Blank Shader Graph，名为 LaserShader。
+2. 编辑 LaserShader，Graph Inspector -> Graph Settings -> Target Settings -> Visual Effect。Alpha Clipping -> On。
+3. 创建 Color 属性 Color，Mode -> HDR，白色，Alpha -> 100。
+4. 创建 Texture2D 属性 Mask 和 MainTex，创建 Vector2 属性 MainTexSpeed，X -> 1。
+5. MainTex 连接新节点 Sample Texture2D。
+6. Mask 连接新节点 Sample Texture2D。
+7. 将 5 和 6 的 Sample Texture2D 分别连接新节点 Multiply。
+8. Color 连接新节点 Multiply: A，7.Multiply 连接 Multiply -> B。该 Multiply 连接 Fragment -> BaseColor。
+9. 创建 Tiling And Offset 节点，连接 MainTex -> Sample Texture 2D -> UV。
+10. 创建 Time 节点连接新节点 Multiply: A，MainTexSpeed 连接 Multiply -> B，该 Multiply 连接 Tiling And Offset -> Offset。
+11. 将 7.Multiply 连接新节点 Split，Split -> A 连接 Fragment -> Alpha。
+12. 创建 Float 属性 AlphaClip，Mode -> Slider。连接 Fragment -> Alpha Clip Threshold。
+13. 创建 UV 节点，连接新节点 Lerp: A。
+14. 创建 Simple Noise 节点，X -> 30。连接 Lerp -> B。
+15. 创建 Time 节点，连接新节点 Multiply: A。
+16. 创建 Vector2 属性 DistortionSpeed，连接 15.Multiply -> B。15.Multiply 连接新节点 Tiling And Offset: Offset，Tiling And Offset 连接 Simple Noise -> UV。
+17. 创建 Float 属性 DistortionAmount，Mode -> Slider。连接 Lerp -> T。
+18. 创建 Float 属性 DistortionScale，X -> 30。连接 Simple Noise -> Scale。
+19. Lerp 连接 Tiling And Offset -> UV。
+20. 回到 vfxgraph，Shader Graph -> LaserShader。Blend Mode -> Additive。
+21. Distortion Speed -> X -> -3，Distortion Amount -> 0.2。
+22. 将所有节点组成 BEAM_CORE，Output Particle Mesh 也命名为 BEAM_CORE。
+23. 复制 BEAM_CORE，命名为 ELECTRIC_BEAM，Output Particle Mesh 也改成相同名字。
+24. Color -> 蓝色，AlphaClip -> 0.2。Set Scale -> X -> 0.6。
+25. 复制 BEAM_CORE，命名为 BEAM_DARK，Output Particle Mesh 也改成相同名字。
+26. Color -> 深红，Blend Mode -> Alpha。Set Scale -> X -> 0.5，MainTex -> 透明底的图片，vfxgraph -> Inspector -> Output Render Order -> 将 BEAM_DARK 拖到顶部。
+
+## 17.3 粒子效果
+
+1. 创建 Simple Particle System。
+2. Spawn System -> Loop Duration 和 Loop Count -> Constant。
+3. Duration 连接新节点 Multiply，Multiply -> B -> 0.08。
+4. Duration 连接新节点 Subtract，将 3.Multiply 连接 Subtract -> B。
+5. Subtract 连接 Loop Duration，Rate -> 40。
+6. Set Velocity Random ->  (-0.5, -0.5, 20) - (0.5, 0.5, 40)。
+7. Set Lifetime -> (0.2, 0.45)。
+8. 创建 Set Position Arc Circle，Arc Circle -> Circle -> Radius -> 0.5。
+9. Blend Mode -> Additive，MainTexture -> Default-Particle。
+10. Orient -> Mode -> Along Velocity。
+11. 创建 Set Size，Random -> Uniform，AB -> (0.7, 1.2)。
+12. Set Size over Life -> Composition -> Multiply。Size -> 从大到小的抛物线。
+13. 创建 Set Color，橙色。禁用 Set Color over Life。
+14. 创建 Set Scale ，Scale -> X -> 0.05。
 
 # 19. 火雨术
 
